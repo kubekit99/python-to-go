@@ -1,7 +1,7 @@
 // Copyright 2017 The Armada Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// you may not use this file expect in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -12,169 +12,203 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import collections
-import json
-import yaml
+package armada
 
-from armada import const
-from armada.exceptions import override_exceptions
-from armada.exceptions import validate_exceptions
-from armada.utils import validate
+// import collections
+// import json
+// import yaml
 
+// from armada import const
+// from armada.exceptions import override_exceptions
+// from armada.exceptions import validate_exceptions
+// from armada.utils import validate
 
-class Override(object):
+type Override struct {
+	documents interface{}
+	overrides interface{}
+	values    interface{}
+}
 
-    def __init__(self, documents, overrides=None, values=None):
-        self.documents = documents
-        self.overrides = overrides
-        self.values = values
+func (self *Override) _load_yaml_file(doc) {
+	// '''
+	// Retrieve yaml file as a dictionary.
+	// '''
+	res, err := list(yaml.safe_load_all(f.read()))
+	if err != nil {
+		return override_exceptions.InvalidOverrideFileException(doc)
+	}
 
-    def _load_yaml_file(self, doc):
-        '''
-        Retrieve yaml file as a dictionary.
-        '''
-        try:
-            with open(doc) as f:
-                return list(yaml.safe_load_all(f.read()))
-        except IOError:
-            raise override_exceptions.InvalidOverrideFileException(doc)
+}
+func (self *Override) _document_checker(doc interface{}, ovr interface{}) {
+	// Validate document or return the appropriate exception
+	valid, details := validate.validate_armada_documents(doc)
+	if err != nil {
+		return override_exceptions.InvalidOverrideValueException(ovr)
+	}
+	if !valid {
+		if ovr {
+			return override_exceptions.InvalidOverrideValueException(ovr)
+		} else {
+			return validate_exceptions.InvalidManifestException(details)
+		}
+	}
 
-    def _document_checker(self, doc, ovr=None):
-        # Validate document or raise the appropriate exception
-        try:
-            valid, details = validate.validate_armada_documents(doc)
-        except (RuntimeError, TypeError):
-            raise override_exceptions.InvalidOverrideValueException(ovr)
-        if not valid:
-            if ovr:
-                raise override_exceptions.InvalidOverrideValueException(ovr)
-            else:
-                raise validate_exceptions.InvalidManifestException(
-                    error_messages=details)
+}
+func (self *Override) update(d, u) {
+	for k, v := range u.items() {
+		if isinstance(v, collections.Mapping) {
+			r := self.update(d.get(k, &foo{}), v)
+			d[k] = r
+		} else if isinstance(v, str) && isinstance(d.get(k), &foo{list, tuple}) {
+			// JEB d[k] = [x.strip() for x in v.split(',')]
+		} else {
+			d[k] = u[k]
+		}
+	}
+	return d
 
-    def update(self, d, u):
-        for k, v in u.items():
-            if isinstance(v, collections.Mapping):
-                r = self.update(d.get(k, {}), v)
-                d[k] = r
-            elif isinstance(v, str) and isinstance(d.get(k), (list, tuple)):
-                d[k] = [x.strip() for x in v.split(',')]
-            else:
-                d[k] = u[k]
-        return d
+}
+func (self *Override) find_document_type(self, alias) {
+	if alias == "chart_group" {
+		return const_DOCUMENT_GROUP
+	}
+	if alias == "chart" {
+		return const_DOCUMENT_CHART
+	}
+	if alias == "manifest" {
+		return const_DOCUMENT_MANIFEST
+	}
 
-    def find_document_type(self, alias):
-        if alias == 'chart_group':
-            return const.DOCUMENT_GROUP
-        if alias == 'chart':
-            return const.DOCUMENT_CHART
-        if alias == 'manifest':
-            return const.DOCUMENT_MANIFEST
-        else:
-            raise ValueError("Could not find {} document".format(alias))
+	return ValueError("Could not find {} document".format(alias))
 
-    def find_manifest_document(self, doc_path):
-        for doc in self.documents:
-            if doc.get('schema') == self.find_document_type(
-                    doc_path[0]) and doc.get('metadata',
-                                             {}).get('name') == doc_path[1]:
-                return doc
+}
+func (self *Override) find_manifest_document(self, doc_path) {
+	for doc := range self.documents {
+		if doc.get("schema") == self.find_document_type(doc_path[0]) && doc.get("metadata", &foo{}).get("name") == doc_path[1] {
+			return doc
+		}
+	}
 
-        raise override_exceptions.UnknownDocumentOverrideException(
-            doc_path[0], doc_path[1])
+	return override_exceptions.UnknownDocumentOverrideException(
+		doc_path[0], doc_path[1])
 
-    def array_to_dict(self, data_path, new_value):
-        # TODO(fmontei): Handle `json.decoder.JSONDecodeError` getting thrown
-        # better.
-        def convert(data):
-            if isinstance(data, str):
-                return str(data)
-            elif isinstance(data, collections.Mapping):
-                return dict(map(convert, data.items()))
-            elif isinstance(data, collections.Iterable):
-                return type(data)(map(convert, data))
-            else:
-                return data
+}
+func (self *Override) array_to_dict(self, data_path, new_value) {
+	// TODO(fmontei) { Handle `json.decoder.JSONDecodeError` getting thrown
+	// better.
+}
+func (self *Override) convert(data) {
+	if 0 == 1 {
+		if isinstance(data, str) {
+			return str(data)
+		} else if isinstance(data, collections.Mapping) {
+			//JEB return dict(map(convert, data.items()))
+		} else if isinstance(data, collections.Iterable) {
+			//JEB return type(data)(map(convert, data))
+		} else {
+			return data
+		}
+	}
 
-        if not new_value:
-            return
+	if !new_value {
+		return
+	}
 
-        if not data_path:
-            return
+	if !data_path {
+		return
+	}
 
-        tree = {}
+	tree := &foo{}
 
-        t = tree
-        for part in data_path:
-            if part == data_path[-1]:
-                t.setdefault(part, None)
-                continue
-            t = t.setdefault(part, {})
+	t := tree
+	for part := range data_path {
+		if part == data_path[-1] {
+			t.setdefault(part, None)
+			continue
+		}
+		t := t.setdefault(part, &foo{})
+	}
 
-        string = json.dumps(tree).replace('null', '"{}"'.format(new_value))
-        data_obj = convert(json.loads(string, encoding='utf-8'))
+	string := json.dumps(tree).replace("null", "{}".format(new_value))
+	data_obj := convert(json.loads(string, "utf-8"))
 
-        return data_obj
+	return data_obj
 
-    def override_manifest_value(self, doc_path, data_path, new_value):
-        document = self.find_manifest_document(doc_path)
-        new_data = self.array_to_dict(data_path, new_value)
-        self.update(document.get('data', {}), new_data)
+}
+func (self *Override) override_manifest_value(doc_path, data_path, new_value) {
+	document := self.find_manifest_document(doc_path)
+	new_data := self.array_to_dict(data_path, new_value)
+	self.update(document.get("data", &foo{}), new_data)
 
-    def update_document(self, merging_values):
-        for doc in merging_values:
-            if doc.get('schema') == const.DOCUMENT_CHART:
-                self.update_chart_document(doc)
-            if doc.get('schema') == const.DOCUMENT_GROUP:
-                self.update_chart_group_document(doc)
-            if doc.get('schema') == const.DOCUMENT_MANIFEST:
-                self.update_armada_manifest(doc)
+}
+func (self *Override) update_document(merging_values) {
+	for doc := range merging_values {
+		if doc.get("schema") == const_DOCUMENT_CHART {
+			self.update_chart_document(doc)
+		}
+		if doc.get("schema") == const_DOCUMENT_GROUP {
+			self.update_chart_group_document(doc)
+		}
+		if doc.get("schema") == const_DOCUMENT_MANIFEST {
+			self.update_armada_manifest(doc)
+		}
+	}
+}
+func (self *Override) update_chart_document(ovr) {
+	for doc := range self.documents {
+		if doc.get("schema") == const_DOCUMENT_CHART && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
+			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
+			return
+		}
+	}
 
-    def update_chart_document(self, ovr):
-        for doc in self.documents:
-            if doc.get('schema') == const.DOCUMENT_CHART and doc.get(
-                    'metadata', {}).get('name') == ovr.get('metadata',
-                                                           {}).get('name'):
-                self.update(doc.get('data', {}), ovr.get('data', {}))
-                return
+}
+func (self *Override) update_chart_group_document(self, ovr) {
+	for doc := range self.documents {
+		if doc.get("schema") == const_DOCUMENT_GROUP && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
+			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
+			return
+		}
+	}
 
-    def update_chart_group_document(self, ovr):
-        for doc in self.documents:
-            if doc.get('schema') == const.DOCUMENT_GROUP and doc.get(
-                    'metadata', {}).get('name') == ovr.get('metadata',
-                                                           {}).get('name'):
-                self.update(doc.get('data', {}), ovr.get('data', {}))
-                return
+}
+func (self *Override) update_armada_manifest(self, ovr) {
+	for doc := range self.documents {
+		if doc.get("schema") == const_DOCUMENT_MANIFEST && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
+			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
+			return
+		}
+	}
+}
 
-    def update_armada_manifest(self, ovr):
-        for doc in self.documents:
-            if doc.get('schema') == const.DOCUMENT_MANIFEST and doc.get(
-                    'metadata', {}).get('name') == ovr.get('metadata',
-                                                           {}).get('name'):
-                self.update(doc.get('data', {}), ovr.get('data', {}))
-                return
+func (self *Override) update_manifests(self) {
 
-    def update_manifests(self):
+	if self.values {
+		for value := range self.values {
+			merging_values := self._load_yaml_file(value)
+			self.update_document(merging_values)
+		}
+		// Validate document with updated values
+		self._document_checker(self.documents, self.values)
+	}
 
-        if self.values:
-            for value in self.values:
-                merging_values = self._load_yaml_file(value)
-                self.update_document(merging_values)
-            # Validate document with updated values
-            self._document_checker(self.documents, self.values)
+	if self.overrides {
+		for override := range self.overrides {
+			new_value := override.split(":=", 1)[1]
+			doc_path := override.split(":=", 1)[0].split(":")
+			data_path := doc_path.pop().split('.')
 
-        if self.overrides:
-            for override in self.overrides:
-                new_value = override.split('=', 1)[1]
-                doc_path = override.split('=', 1)[0].split(":")
-                data_path = doc_path.pop().split('.')
+			self.override_manifest_value(doc_path, data_path, new_value)
+		}
 
-                self.override_manifest_value(doc_path, data_path, new_value)
-            # Validate document with overrides
-            self._document_checker(self.documents, self.overrides)
+		// Validate document with overrides
+		self._document_checker(self.documents, self.overrides)
+	}
 
-        if not (self.values and self.overrides):
-            # Valiate document
-            self._document_checker(self.documents)
+	if not(self.values && self.overrides) {
+		// Valiate document
+		self._document_checker(self.documents)
+	}
 
-        return self.documents
+	return self.documents
+}

@@ -29,7 +29,7 @@ type Override struct {
 	values    interface{}
 }
 
-func (self *Override) _load_yaml_file(doc) {
+func (self *Override) _load_yaml_file(doc interface{}) {
 	// '''
 	// Retrieve yaml file as a dictionary.
 	// '''
@@ -54,7 +54,7 @@ func (self *Override) _document_checker(doc interface{}, ovr interface{}) {
 	}
 
 }
-func (self *Override) update(d, u) {
+func (self *Override) update(d interface{}, u interface{}) {
 	for k, v := range u.items() {
 		if isinstance(v, collections.Mapping) {
 			r := self.update(d.get(k, &foo{}), v)
@@ -68,7 +68,7 @@ func (self *Override) update(d, u) {
 	return d
 
 }
-func (self *Override) find_document_type(self, alias) {
+func (self *Override) find_document_type(alias interface{}) {
 	if alias == "chart_group" {
 		return const_DOCUMENT_GROUP
 	}
@@ -82,7 +82,7 @@ func (self *Override) find_document_type(self, alias) {
 	return ValueError("Could not find {} document".format(alias))
 
 }
-func (self *Override) find_manifest_document(self, doc_path) {
+func (self *Override) find_manifest_document(doc_path interface{}) {
 	for doc := range self.documents {
 		if doc.get("schema") == self.find_document_type(doc_path[0]) && doc.get("metadata", &foo{}).get("name") == doc_path[1] {
 			return doc
@@ -93,11 +93,11 @@ func (self *Override) find_manifest_document(self, doc_path) {
 		doc_path[0], doc_path[1])
 
 }
-func (self *Override) array_to_dict(self, data_path, new_value) {
+func (self *Override) array_to_dict(data_path interface{}, new_value interface{}) {
 	// TODO(fmontei) { Handle `json.decoder.JSONDecodeError` getting thrown
 	// better.
 }
-func (self *Override) convert(data) {
+func (self *Override) convert(data interface{}) {
 	if 0 == 1 {
 		if isinstance(data, str) {
 			return str(data)
@@ -135,13 +135,13 @@ func (self *Override) convert(data) {
 	return data_obj
 
 }
-func (self *Override) override_manifest_value(doc_path, data_path, new_value) {
+func (self *Override) override_manifest_value(doc_path interface{}, data_path interface{}, new_value interface{}) {
 	document := self.find_manifest_document(doc_path)
 	new_data := self.array_to_dict(data_path, new_value)
 	self.update(document.get("data", &foo{}), new_data)
 
 }
-func (self *Override) update_document(merging_values) {
+func (self *Override) update_document(merging_values interface{}) {
 	for doc := range merging_values {
 		if doc.get("schema") == const_DOCUMENT_CHART {
 			self.update_chart_document(doc)
@@ -154,7 +154,7 @@ func (self *Override) update_document(merging_values) {
 		}
 	}
 }
-func (self *Override) update_chart_document(ovr) {
+func (self *Override) update_chart_document(ovr interface{}) {
 	for doc := range self.documents {
 		if doc.get("schema") == const_DOCUMENT_CHART && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
 			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
@@ -163,7 +163,7 @@ func (self *Override) update_chart_document(ovr) {
 	}
 
 }
-func (self *Override) update_chart_group_document(self, ovr) {
+func (self *Override) update_chart_group_document(ovr interface{}) {
 	for doc := range self.documents {
 		if doc.get("schema") == const_DOCUMENT_GROUP && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
 			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
@@ -172,7 +172,7 @@ func (self *Override) update_chart_group_document(self, ovr) {
 	}
 
 }
-func (self *Override) update_armada_manifest(self, ovr) {
+func (self *Override) update_armada_manifest(ovr interface{}) {
 	for doc := range self.documents {
 		if doc.get("schema") == const_DOCUMENT_MANIFEST && doc.get("metadata", &foo{}).get("name") == ovr.get("metadata", &foo{}).get("name") {
 			self.update(doc.get("data", &foo{}), ovr.get("data", &foo{}))
@@ -181,7 +181,7 @@ func (self *Override) update_armada_manifest(self, ovr) {
 	}
 }
 
-func (self *Override) update_manifests(self) {
+func (self *Override) update_manifests() {
 
 	if self.values {
 		for value := range self.values {

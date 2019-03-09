@@ -46,20 +46,20 @@ package armada
 // sets for itself which can be seen here {
 //   https://github.com/helm/helm/blob/2d77db11fa47005150e682fb13c3cf49eab98fbb/pkg/tiller/server.go#L34
 
-var MAX_MESSAGE_LENGTH = 429496729
+// var MAX_MESSAGE_LENGTH = 429496729
 
-var CONF = cfg.CONF
-var LOG = logging.getLogger(__name__)
+// var CONF = cfg.CONF
+// var LOG = logging.getLogger(__name__)
 
 type CommonEqualityMixin struct {
 }
 
-func (self *CommponEqualityMixin) __eq__(self, other) {
+func (self *CommonEqualityMixin) __eq__(other interface{}) {
 	return (isinstance(other, self.__class__) &&
 		self.__dict__ == other.__dict__)
 
 }
-func (self *CommponEqualityMixin) __ne__(self, other) {
+func (self *CommonEqualityMixin) __ne__(other interface{}) {
 	return !self.__eq__(other)
 }
 
@@ -68,7 +68,7 @@ type TillerResult struct {
 	CommonEqualityMixin
 }
 
-func (self *TillerResult) __init__(self, release, namespace, status, description, version) {
+func (self *TillerResult) __init__(release interface{}, namespace interface{}, status interface{}, description interface{}, version interface{}) {
 	self.release = release
 	self.namespace = namespace
 	self.status = status
@@ -81,10 +81,25 @@ type Tiller struct {
 	// The Tiller class supports communication and requests to the Tiller Helm
 	// service over gRPC
 	// """
+	tiller_host      string
+	tiller_port      int    // JEB or CONF.tiller_port
+	tiller_namespace string // JEB or CONF.tiller_namespace
+	bearer_token     string
+	dry_run          bool // JEB or False
 
+	// init k8s connectivity
+	k8s interface{}
+
+	// init Tiller channel
+	channel interface{}
+
+	// init timeout for all requests
+	// and assume eventually this will
+	// be fed at runtime as an override
+	timeout int
 }
 
-func (self *Tiller) __init__(self, tiller_host, tiller_port, tiller_namespace, bearer_token, dry_run) {
+func (self *Tiller) __init__(tiller_host interface{}, tiller_port interface{}, tiller_namespace interface{}, bearer_token interface{}, dry_run interface{}) {
 	self.tiller_host = tiller_host
 	self.tiller_port = tiller_port           // JEB or CONF.tiller_port
 	self.tiller_namespace = tiller_namespace // JEB or CONF.tiller_namespace
@@ -108,14 +123,14 @@ func (self *Tiller) __init__(self, tiller_host, tiller_port, tiller_namespace, b
 }
 
 // @property
-func (self *Tiller) metadata(self) {
+func (self *Tiller) metadata() {
 	// """
 	// Return Tiller metadata for requests
 	// """
 	return []string{"x-helm-api-client", TILLER_VERSION}
 
 }
-func (self *Tiller) get_channel(self) {
+func (self *Tiller) get_channel() {
 	// """
 	// Return a Tiller channel
 	// """
@@ -136,12 +151,11 @@ func (self *Tiller) get_channel(self) {
 		return ex.ChannelException()
 	}
 }
-func (self *Tiller) _get_tiller_pod(self) {
+func (self *Tiller) _get_tiller_pod() {
 	// """
 	// Returns Tiller pod using the Tiller pod labels specified in the Armada
 	// config
 	// """
-	pods := None
 	namespace := self._get_tiller_namespace()
 	pods := self.k8s.get_namespace_pod(
 		namespace, CONF.tiller_pod_labels).items
@@ -162,7 +176,7 @@ func (self *Tiller) _get_tiller_pod(self) {
 	return ex.TillerPodNotRunningException()
 
 }
-func (self *Tiller) _get_tiller_ip(self) {
+func (self *Tiller) _get_tiller_ip() {
 	// """
 	// Returns the Tiller pod"s IP address by searching all namespaces
 	// """
@@ -176,18 +190,18 @@ func (self *Tiller) _get_tiller_ip(self) {
 	}
 
 }
-func (self *Tiller) _get_tiller_port(self) {
+func (self *Tiller) _get_tiller_port() {
 	// """Stub method to support arbitrary ports in the future"""
 	LOG.debug("Using Tiller host port: %s", self.tiller_port)
 	return self.tiller_port
 
 }
-func (self *Tiller) _get_tiller_namespace(self) {
+func (self *Tiller) _get_tiller_namespace() {
 	LOG.debug("Using Tiller namespace: %s", self.tiller_namespace)
 	return self.tiller_namespace
 
 }
-func (self *Tiller) tiller_status(self) {
+func (self *Tiller) tiller_status() {
 	// """
 	// return if Tiller exist or not
 	// """
@@ -200,7 +214,7 @@ func (self *Tiller) tiller_status(self) {
 	return False
 
 }
-func (self *Tiller) list_releases(self) {
+func (self *Tiller) list_releases() {
 	// """
 	// List Helm Releases
 	// """
@@ -305,7 +319,7 @@ func (self *Tiller) get_results() {
 	return releases
 
 }
-func (self *Tiller) get_chart_templates(self, template_name, name, release_name, namespace, chart, disable_hooks, values) {
+func (self *Tiller) get_chart_templates(template_name interface{}, name interface{}, release_name interface{}, namespace interface{}, chart interface{}, disable_hooks interface{}, values interface{}) {
 	// returns some info
 
 	LOG.info("Template( %s ) : %s ", template_name, name)
@@ -332,7 +346,7 @@ func (self *Tiller) get_chart_templates(self, template_name, name, release_name,
 	}
 
 }
-func (self *Tiller) _pre_update_actions(self, actions, release_name, namespace, chart, disable_hooks, values, timeout) {
+func (self *Tiller) _pre_update_actions(actions interface{}, release_name interface{}, namespace interface{}, chart interface{}, disable_hooks interface{}, values interface{}, timeout interface{}) {
 	// """
 	// :param actions: array of items actions
 	// :param namespace: name of pod for actions
@@ -381,7 +395,7 @@ func (self *Tiller) _pre_update_actions(self, actions, release_name, namespace, 
 	}
 
 }
-func (self *Tiller) list_charts(self) {
+func (self *Tiller) list_charts() {
 	// """
 	// List Helm Charts from Latest Releases
 
@@ -406,11 +420,12 @@ func (self *Tiller) list_charts(self) {
 	return charts
 
 }
-func (self *Tiller) update_release(self, chart, release, namespace, None, None, False, None, False, None, False, False) {
+func (self *Tiller) update_release(chart interface{}, release interface{}, namespace interface{}, pre_actions interface{}, post_actions interface{}, disable_hooks interface{}, values interface{}, wait interface{}, timeout interface{}, force interface{},
+	recreate_pods interface{}) {
 	// """
 	// Update a Helm Release
 	// """
-	timeout := self._check_timeout(wait, timeout)
+	timeout = self._check_timeout(wait, timeout)
 
 	LOG.info(
 		"Helm update release%s: wait:=%s, timeout:=%s, force:=%s, recreate_pods:=%s",
@@ -462,11 +477,12 @@ func (self *Tiller) update_release(self, chart, release, namespace, None, None, 
 	return tiller_result
 
 }
-func (self *Tiller) install_release(self, chart, release, namespace, None, False, None) {
+
+func (self *Tiller) install_release(chart interface{}, release interface{}, namespace interface{}, values interface{}, wait interface{}, timeout interface{}) {
 	// """
 	// Create a Helm Release
 	// """
-	timeout := self._check_timeout(wait, timeout)
+	timeout = self._check_timeout(wait, timeout)
 
 	LOG.info("Helm install release%s: wait:=%s, timeout:=%s",
 		// JEB (" (dry run)" if self.dry_run else ""),
@@ -512,7 +528,7 @@ func (self *Tiller) install_release(self, chart, release, namespace, None, False
 	}
 
 }
-func (self *Tiller) test_release(self, release, timeout, cleanup) {
+func (self *Tiller) test_release(release interface{}, timeout interface{}, cleanup interface{}) {
 	// """
 	// :param release: name of release to test
 	// :param timeout: runtime before exiting
@@ -558,7 +574,7 @@ func (self *Tiller) test_release(self, release, timeout, cleanup) {
 	}
 
 }
-func (self *Tiller) get_release_status(self, release, version) {
+func (self *Tiller) get_release_status(release interface{}, version interface{}) {
 	// """
 	// :param release: name of release to test
 	// :param version: version of release status
@@ -583,7 +599,7 @@ func (self *Tiller) get_release_status(self, release, version) {
 	}
 
 }
-func (self *Tiller) get_release_content(self, release, version) {
+func (self *Tiller) get_release_content(release interface{}, version interface{}) {
 	// """
 	// :param release: name of release to test
 	// :param version: version of release status
@@ -608,7 +624,7 @@ func (self *Tiller) get_release_content(self, release, version) {
 	}
 
 }
-func (self *Tiller) tiller_version(self) {
+func (self *Tiller) tiller_version() {
 	// """
 	// :returns: Tiller version
 	// """
@@ -620,9 +636,9 @@ func (self *Tiller) tiller_version(self) {
 		tiller_version := stub.GetVersion(
 			release_request, self.timeout, self.metadata)
 
-		tiller_version := getattr(tiller_version.Version, "sem_ver", None)
+		tiller_version2 := getattr(tiller_version.Version, "sem_ver", None)
 		LOG.debug("Got Tiller version %s", tiller_version)
-		return tiller_version
+		return tiller_version2
 
 	}
 	if err != nil {
@@ -631,7 +647,7 @@ func (self *Tiller) tiller_version(self) {
 	}
 
 }
-func (self *Tiller) uninstall_release(self, release, disable_hooks, purge, timeout) {
+func (self *Tiller) uninstall_release(release interface{}, disable_hooks interface{}, purge interface{}, timeout interface{}) {
 	// """
 	// :param: release - Helm chart release name
 	// :param: purge - deep delete of chart
@@ -672,7 +688,7 @@ func (self *Tiller) uninstall_release(self, release, disable_hooks, purge, timeo
 	}
 
 }
-func (self *Tiller) delete_resources(self, resource_type, resource_labels, namespace, wait, timeout) {
+func (self *Tiller) delete_resources(resource_type interface{}, resource_labels interface{}, namespace interface{}, wait interface{}, timeout interface{}) {
 	// """
 	// Delete resources matching provided resource type, labels, and
 	// namespace.
@@ -681,7 +697,7 @@ func (self *Tiller) delete_resources(self, resource_type, resource_labels, names
 	// :param resource_labels: labels for selecting the resources
 	// :param namespace: namespace of resources
 	// """
-	timeout := self._check_timeout(wait, timeout)
+	timeout = self._check_timeout(wait, timeout)
 
 	label_selector := ""
 	if resource_labels != ni {
@@ -767,7 +783,7 @@ func (self *Tiller) delete_resources(self, resource_type, resource_labels, names
 	}
 
 }
-func (self *Tiller) rolling_upgrade_pod_deployment(self, name, release_name, namespace, resource_labels, action_type, chart, disable_hooks, values, timeout) {
+func (self *Tiller) rolling_upgrade_pod_deployment(name interface{}, release_name interface{}, namespace interface{}, resource_labels interface{}, action_type interface{}, chart interface{}, disable_hooks interface{}, values interface{}, timeout interface{}) {
 	// """
 	// update statefullsets (daemon, stateful)
 	// """
@@ -818,12 +834,12 @@ func (self *Tiller) rolling_upgrade_pod_deployment(self, name, release_name, nam
 	}
 
 }
-func (self *Tiller) rollback_release(self, release_name, version, wait, timeout, force recreate_pods) {
+func (self *Tiller) rollback_release(release_name interface{}, version interface{}, wait interface{}, timeout interface{}, force interface{}, recreate_pods interface{}) {
 	// """
 	// Rollback a helm release.
 	// """
 
-	timeout := self._check_timeout(wait, timeout)
+	timeout = self._check_timeout(wait, timeout)
 
 	LOG.debug(
 		"Helm rollback%s of release:=%s, version:=%s, wait:=%s, timeout:=%s",
@@ -855,7 +871,7 @@ func (self *Tiller) rollback_release(self, release_name, version, wait, timeout,
 	}
 
 }
-func (self *Tiller) _check_timeout(self, wait, timeout) {
+func (self *Tiller) _check_timeout(wait interface{}, timeout interface{}) {
 	if timeout == nil || timeout <= 0 {
 		if wait {
 			LOG.warn(
@@ -866,17 +882,17 @@ func (self *Tiller) _check_timeout(self, wait, timeout) {
 	return timeout
 
 }
-func (self *Tiller) close(self) {
+func (self *Tiller) close() {
 	// Ensure channel was actually initialized before closing
-	if getattr(self, "channel", None) {
+	if getattr("channel", None) {
 		self.channel.close()
 	}
 
 }
-func (self *Tiller) __enter__(self) {
+func (self *Tiller) __enter__() {
 	return self
 
 }
-func (self *Tiller) __exit__(self, exc_type, exc_value, traceback) {
+func (self *Tiller) __exit__(exc_type interface{}, exc_value interface{}, traceback interface{}) {
 	self.close()
 }

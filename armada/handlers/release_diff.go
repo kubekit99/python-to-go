@@ -68,11 +68,11 @@ func (self *ReleaseDiff) get_diff() {
 	return DeepDiff(old_input, new_input, "tree")
 
 }
-func (self *ReleaseDiff) make_release_input(chart, values, desc) {
+func (self *ReleaseDiff) make_release_input(chart interface{}, values interface{}, desc interface{}) {
 	return &foo{"chart": self.make_chart_dict(chart, desc), "values": values}
 
 }
-func (self *ReleaseDiff) make_chart_dict(chart, desc) {
+func (self *ReleaseDiff) make_chart_dict(chart interface{}, desc interface{}) {
 	default_values := yaml.safe_load(chart.values.raw)
 	if err != nil {
 		chart_desc := "{} ({})".format(chart.metadata.name, desc)

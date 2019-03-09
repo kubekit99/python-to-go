@@ -1,0 +1,6 @@
+mkdir armada
+cp -r $HOME/airship-armada/armada/handlers/ armada/
+find armada -name "*.py" -print > foo
+for i in `cat foo`; do NEWNAME=`echo $i | sed -e "s/\.py/\.go/g"`; mv $i $NEWNAME; done
+find . -name "*.go" -print > foo
+for i in `cat foo`; do sed -i -e "s;^#;//;g" $i; done

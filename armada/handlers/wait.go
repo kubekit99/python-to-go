@@ -34,7 +34,7 @@ package armada
 
 // ROLLING_UPDATE_STRATEGY_TYPE := "RollingUpdate"
 
-func get_wait_labels(chart) {
+func get_wait_labels(chart interface{}) {
 	wait_config := chart.get("wait", &foo{})
 	return wait_config.get("labels", &foo{})
 }
@@ -90,17 +90,17 @@ type ChartWait struct {
 
 }
 
-func (self *ChartWait) get_timeout(self) {
+func (self *ChartWait) get_timeout() {
 	return self.timeout
 }
 
-func (self *ChartWait) is_native_enabled(self) {
+func (self *ChartWait) is_native_enabled() {
 	native_wait := self.wait_config.get("native", &foo{})
 	return native_wait.get("enabled", True)
 
 }
 
-func (self *ChartWait) wait(self, timeout) {
+func (self *ChartWait) wait(timeout interface{}) {
 	deadline := time.time() + timeout
 	// TODO(seaneagan) { Parallelize waits
 	for wait := range self.waits {
@@ -109,7 +109,7 @@ func (self *ChartWait) wait(self, timeout) {
 	}
 
 }
-func (self *ChartWait) get_resource_wait(self, resource_config) {
+func (self *ChartWait) get_resource_wait(resource_config interface{}) {
 
 	kwargs := dict(resource_config)
 	resource_type := kwargs.pop("type")
@@ -148,7 +148,7 @@ type ResourceWait struct {
 	skip_if_none_found interface{}
 }
 
-func (self *ResourceWait) is_resource_ready(self, resource) {
+func (self *ResourceWait) is_resource_ready(resource interface{}) {
 	// """
 	// :param resource: resource to check readiness of.
 	// :returns: 2-tuple of (status message, ready bool).
@@ -157,7 +157,7 @@ func (self *ResourceWait) is_resource_ready(self, resource) {
 	return
 }
 
-func (self *ResourceWait) include_resource(resource) {
+func (self *ResourceWait) include_resource(resource interface{}) {
 	// """
 	// Test to include or exclude a resource in a wait operation. This method
 	// can be used to exclude resources that should not be included in wait
@@ -168,7 +168,7 @@ func (self *ResourceWait) include_resource(resource) {
 	return True
 }
 
-func (self *ResourceWait) handle_resource(resource) {
+func (self *ResourceWait) handle_resource(resource interface{}) {
 	resource_name := resource.metadata.name
 
 	{
@@ -189,7 +189,7 @@ func (self *ResourceWait) handle_resource(resource) {
 	}
 }
 
-func (self *ResourceWait) wait(timeout) {
+func (self *ResourceWait) wait(timeout interface{}) {
 	// """
 	// :param timeout: time before disconnecting ``Watch`` stream
 	// """
@@ -261,7 +261,7 @@ func (self *ResourceWait) wait(timeout) {
 	return True
 
 }
-func (self *ResourceWait) _watch_resource_completions(self, timeout) {
+func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
 	// """
 	// Watch and wait for resource completions.
 	// Returns lists of resources in various conditions for the calling
@@ -351,7 +351,7 @@ func (self *ResourceWait) _watch_resource_completions(self, timeout) {
 	}
 }
 
-func (self *ResourceWait) _get_resource_condition(self, resource_conditions, condition_type) {
+func (self *ResourceWait) _get_resource_condition(resource_conditions interface{}, condition_type interface{}) {
 	for pc := range resource_conditions {
 		if pc.typef == condition_type {
 			return pc
@@ -363,7 +363,7 @@ type PodWait struct {
 	ResourceWait
 }
 
-func (self *PodWait) include_resource(self, resource) {
+func (self *PodWait) include_resource(resource interface{}) {
 	pod := resource
 	include := !is_test_pod(pod)
 
@@ -378,7 +378,7 @@ func (self *PodWait) include_resource(self, resource) {
 	return include
 
 }
-func (self *PodWait) is_resource_ready(self, resource) {
+func (self *PodWait) is_resource_ready(resource interface{}) {
 	pod := resource
 	name := pod.metadata.name
 
@@ -403,7 +403,7 @@ type JobWait struct {
 	ResourceWait
 }
 
-func (self *JobWait) is_resource_ready(self, resource) {
+func (self *JobWait) is_resource_ready(resource interface{}) {
 	job := resource
 	name := job.metadata.name
 
@@ -418,7 +418,7 @@ func (self *JobWait) is_resource_ready(self, resource) {
 	return msg.format(name), True
 }
 
-var CountOrPercent = collections.namedtuple("CountOrPercent", "number is_percent source")
+// JEB var CountOrPercent = collections.namedtuple("CountOrPercent", "number is_percent source")
 
 // Controller logic (Deployment, DaemonSet, StatefulSet) is adapted from
 // `kubectl rollout status` {
@@ -428,7 +428,7 @@ type ControllerWait struct {
 	ResourceWait
 }
 
-func (self *ControllerWait) __init__(self, resource_type, chart_wait, labels, get_resources, min_ready, **kwargs) {
+func (self *ControllerWait) __init__(resource_type interface{}, chart_wait interface{}, labels interface{}, get_resources interface{}, min_ready interface{}, kwargs interface{}) {
 	super(ControllerWait, self).__init__(resource_type, chart_wait, labels, get_resources, **kwargs)
 
 	if isinstance(min_ready, str) {
@@ -446,7 +446,7 @@ func (self *ControllerWait) __init__(self, resource_type, chart_wait, labels, ge
 
 }
 
-func (self *ControllerWait) _is_min_ready(self, ready, total) {
+func (self *ControllerWait) _is_min_ready(ready interface{}, total interface{}) {
 	if self.min_ready.is_percent {
 		min_ready := math.ceil(total * (self.min_ready.number / 100))
 	} else {
@@ -459,7 +459,7 @@ type DeploymentWait struct {
 	ControllerWait
 }
 
-func (self *DeploymentWait) is_resource_ready(self, resource) {
+func (self *DeploymentWait) is_resource_ready(resource interface{}) {
 	deployment := resource
 	name := deployment.metadata.name
 	spec := deployment.spec
@@ -506,7 +506,7 @@ type DaemonSetWait struct {
 	ControllerWait
 }
 
-func (self *DaemonSetWait) is_resource_ready(self, resource) {
+func (self *DaemonSetWait) is_resource_ready(resource interface{}) {
 	daemon := resource
 	name := daemon.metadata.name
 	spec := daemon.spec
@@ -548,7 +548,7 @@ type StatefulSetWait struct {
 	ControllerWait
 }
 
-func (self *StatefulSetWait) is_resource_ready(self, resource) {
+func (self *StatefulSetWait) is_resource_ready(resource interface{}) {
 	sts := resource
 	name := sts.metadata.name
 	spec := sts.spec

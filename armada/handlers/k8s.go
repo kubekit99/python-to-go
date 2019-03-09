@@ -34,8 +34,9 @@ package armada
 // TODO: Remove after this bug is fixed and we have uplifted to a fixed version {
 //       https://github.com/kubernetes-client/python/issues/411
 // Avoid creating thread pools in kubernetes api_client.
-var _dummy_pool = Mock()
-var ThreadPool = nil // JEB lambda *args, **kwargs: _dummy_pool
+
+// var _dummy_pool = Mock()
+// var ThreadPool = nil // JEB lambda *args, **kwargs: _dummy_pool
 
 type K8s struct {
 	// """
@@ -70,7 +71,7 @@ func (self *K8s) init() {
 	self.apps_v1_api = client.AppsV1Api(api_client)
 
 }
-func (self *K8s) delete_job_action(self, name, namespace, propagation_policy, timeout) {
+func (self *K8s) delete_job_action(name interface{}, namespace interface{}, propagation_policy interface{}, timeout interface{}) {
 	// """
 	// Delete a job from a namespace (see _delete_item_action).
 
@@ -85,7 +86,7 @@ func (self *K8s) delete_job_action(self, name, namespace, propagation_policy, ti
 		name, namespace, propagation_policy, timeout)
 
 }
-func (self *K8s) delete_cron_job_action(self, name, namespace, propagation_policy, timeout) {
+func (self *K8s) delete_cron_job_action(name interface{}, namespace interface{}, propagation_policy interface{}, timeout interface{}) {
 	// """
 	// Delete a cron job from a namespace (see _delete_item_action).
 
@@ -101,7 +102,7 @@ func (self *K8s) delete_cron_job_action(self, name, namespace, propagation_polic
 		name, namespace, propagation_policy, timeout)
 
 }
-func (self *K8s) delete_pod_action(self, name, namespace, propagation_policy, timeout) {
+func (self *K8s) delete_pod_action(name interface{}, namespace interface{}, propagation_policy interface{}, timeout interface{}) {
 	// """
 	// Delete a pod from a namespace (see _delete_item_action).
 
@@ -116,7 +117,7 @@ func (self *K8s) delete_pod_action(self, name, namespace, propagation_policy, ti
 		name, namespace, propagation_policy, timeout)
 
 }
-func (self *K8s) _delete_item_action(self, list_func, delete_func, object_type_description, name, namespace, propagation_policy, timeout) {
+func (self *K8s) _delete_item_action(list_func interface{}, delete_func interface{}, object_type_description interface{}, name interface{}, namespace interface{}, propagation_policy interface{}, timeout interface{}) {
 	// """
 	// This function takes the action to delete an object (job, cronjob, pod)
 	// from kubernetes. It will wait for the object to be fully deleted before
@@ -184,7 +185,7 @@ func (self *K8s) _delete_item_action(self, list_func, delete_func, object_type_d
 		return e
 	}
 }
-func (self *K8s) get_namespace_job(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_job(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param label_selector: labels of the jobs
 	// :param namespace: namespace of the jobs
@@ -198,7 +199,7 @@ func (self *K8s) get_namespace_job(self, namespace, **kwargs) {
 	return res
 
 }
-func (self *K8s) get_namespace_cron_job(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_cron_job(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param label_selector: labels of the cron jobs
 	// :param namespace: namespace of the cron jobs
@@ -214,7 +215,7 @@ func (self *K8s) get_namespace_cron_job(self, namespace, **kwargs) {
 	return res
 
 }
-func (self *K8s) get_namespace_pod(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_pod(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param namespace: namespace of the Pod
 	// :param label_selector: filters Pods by label
@@ -225,7 +226,7 @@ func (self *K8s) get_namespace_pod(self, namespace, **kwargs) {
 	return self.client.list_namespaced_pod(namespace, **kwargs)
 
 }
-func (self *K8s) get_namespace_deployment(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_deployment(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param namespace: namespace of target deamonset
 	// :param labels: specify targeted deployment
@@ -233,7 +234,7 @@ func (self *K8s) get_namespace_deployment(self, namespace, **kwargs) {
 	return self.apps_v1_api.list_namespaced_deployment(namespace, **kwargs)
 
 }
-func (self *K8s) get_namespace_stateful_set(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_stateful_set(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param namespace: namespace of target stateful set
 	// :param labels: specify targeted stateful set
@@ -242,7 +243,7 @@ func (self *K8s) get_namespace_stateful_set(self, namespace, **kwargs) {
 		namespace, **kwargs)
 
 }
-func (self *K8s) get_namespace_daemon_set(self, namespace, **kwargs) {
+func (self *K8s) get_namespace_daemon_set(namespace interface{}, kwargs interface{}) {
 	// """
 	// :param namespace: namespace of target deamonset
 	// :param labels: specify targeted daemonset
@@ -250,7 +251,7 @@ func (self *K8s) get_namespace_daemon_set(self, namespace, **kwargs) {
 	return self.apps_v1_api.list_namespaced_daemon_set(namespace, **kwargs)
 
 }
-func (self *K8s) create_daemon_action(self, namespace, template) {
+func (self *K8s) create_daemon_action(namespace interface{}, template interface{}) {
 	// """
 	// :param: namespace - pod namespace
 	// :param: template - deploy daemonset via yaml
@@ -260,7 +261,7 @@ func (self *K8s) create_daemon_action(self, namespace, template) {
 	self.apps_v1_api.create_namespaced_daemon_set(namespace, body)
 
 }
-func (self *K8s) delete_daemon_action(self, name, namespace, body) {
+func (self *K8s) delete_daemon_action(name interface{}, namespace interface{}, body interface{}) {
 	// """
 	// :param: namespace - pod namespace
 
@@ -275,7 +276,7 @@ func (self *K8s) delete_daemon_action(self, name, namespace, body) {
 		name, namespace, body)
 
 }
-func (self *K8s) wait_for_pod_redeployment(self, old_pod_name, namespace) {
+func (self *K8s) wait_for_pod_redeployment(old_pod_name interface{}, namespace interface{}) {
 	// """
 	// :param old_pod_name: name of pods
 	// :param namespace: kubernetes namespace
@@ -316,12 +317,12 @@ func (self *K8s) wait_for_pod_redeployment(self, old_pod_name, namespace) {
 	}
 
 }
-func (self *K8s) wait_get_completed_podphase(self, release, timeout) {
+func (self *K8s) wait_get_completed_podphase(release interface{}, timeout interface{}) {
 	// """
 	// :param release: part of namespace
 	// :param timeout: time before disconnecting stream
 	// """
-	timeout := self._check_timeout(timeout)
+	timeout = self._check_timeout(timeout)
 
 	w := watch.Watch()
 	found_events := False
@@ -344,7 +345,7 @@ func (self *K8s) wait_get_completed_podphase(self, release, timeout) {
 	}
 
 }
-func (self *K8s) _check_timeout(self, timeout) {
+func (self *K8s) _check_timeout(timeout interface{}) {
 	if timeout <= 0 {
 		LOG.warn(
 			"Kubernetes timeout is invalid or unspecified, using default %ss.", DEFAULT_K8S_TIMEOUT)

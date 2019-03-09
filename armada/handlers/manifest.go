@@ -71,7 +71,7 @@ func (self *Manifest) init() {
 	}
 }
 
-func (self *Manifest) _find_documents(self, target_manifest) {
+func (self *Manifest) _find_documents(target_manifest interface{}) {
 	// """Returns the chart documents, chart group documents,
 	// and Armada manifest
 
@@ -109,7 +109,7 @@ func (self *Manifest) _find_documents(self, target_manifest) {
 	return charts, groups, manifests
 }
 
-func (self *Manifest) find_chart_document(self, name) {
+func (self *Manifest) find_chart_document(name interface{}) {
 	// """Returns a chart document with the specified name
 
 	// :param str name: name of the desired chart document
@@ -127,7 +127,7 @@ func (self *Manifest) find_chart_document(self, name) {
 		details: "Could not build {} named {}".format(const_DOCUMENT_CHART, name)}
 }
 
-func (self *Manifest) find_chart_group_document(self, name) {
+func (self *Manifest) find_chart_group_document(name interface{}) {
 	// """Returns a chart group document with the specified name
 
 	// :param str name: name of the desired chart group document
@@ -145,7 +145,7 @@ func (self *Manifest) find_chart_group_document(self, name) {
 		details: "Could not build {} named {}".format(const_DOCUMENT_GROUP, name)}
 
 }
-func (self *Manifest) build_chart_deps(self, chart) {
+func (self *Manifest) build_chart_deps(chart interface{}) {
 	// """Recursively build chart dependencies for ``chart``.
 
 	// :param dict chart: The chart whose dependencies will be recursively
@@ -173,7 +173,7 @@ func (self *Manifest) build_chart_deps(self, chart) {
 
 }
 
-func (self *Manifest) build_chart_group(self, chart_group) {
+func (self *Manifest) build_chart_group(chart_group interface{}) {
 	// """Builds the chart dependencies for`charts`chart group``.
 
 	// :param dict chart_group: The chart_group whose dependencies
@@ -200,7 +200,7 @@ func (self *Manifest) build_chart_group(self, chart_group) {
 	return chart_group
 }
 
-func (self *Manifest) build_armada_manifest(self) {
+func (self *Manifest) build_armada_manifest() {
 	// """Builds the Armada manifest while pulling out data
 	// from the chart_group.
 
@@ -225,7 +225,7 @@ func (self *Manifest) build_armada_manifest(self) {
 	return self.manifest
 
 }
-func (self *Manifest) get_manifest(self) {
+func (self *Manifest) get_manifest() {
 	// """Builds the Armada manifest
 
 	// :returns: The Armada manifest.

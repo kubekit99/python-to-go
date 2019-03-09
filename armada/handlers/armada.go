@@ -61,29 +61,30 @@ type Armada struct {
 	// :param int k8s_wait_attempt_sleep: The time in seconds to sleep
 	//     between attempts.
 	// """
+	enable_chart_cleanup interface{}
+	dry_run interface{}
+	force_wait interface{}
+	tiller interface{}
+	documents interface{}
+	manifest interface{}
+	chart_cache interface{}
+	chart_deploy interface{}
 }
 
 func (self *Armada) init() {
-	self.enable_chart_cleanup = enable_chart_cleanup
-	self.dry_run = dry_run
-	self.force_wait = force_wait
-	self.tiller = tiller
-	self.documents = Override{
-		documents, set_ovr,
-		values}.update_manifests()
-	if err != nil {
-		return
-	}
-	self.manifest = Manifest(
-		self.documents, target_manifest).get_manifest()
-	self.chart_cache = &foo{}
-	self.chart_deploy = ChartDeploy{
-		disable_update_pre, disable_update_post, self.dry_run,
-		k8s_wait_attempts, k8s_wait_attempt_sleep, timeout, self.tiller}
+	// self.enable_chart_cleanup = enable_chart_cleanup
+	// self.dry_run = dry_run
+	// self.force_wait = force_wait
+	// self.tiller = tiller
+	// self.documents = Override{ documents, set_ovr, values}.update_manifests()
+	// self.manifest = Manifest( self.documents, target_manifest).get_manifest()
+	// self.chart_cache = &foo{}
+	// self.chart_deploy = ChartDeploy{ disable_update_pre, disable_update_post, self.dry_run,
+	// 	k8s_wait_attempts, k8s_wait_attempt_sleep, timeout, self.tiller}
 
 }
 
-func (self *Armada) pre_flight_ops(self) {
+func (self *Armada) pre_flight_ops() {
 	// """Perform a series of checks and operations to ensure proper
 	// deployment.
 	// """
@@ -113,7 +114,7 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func (self *Armada) get_chart(self, ch) {
+func (self *Armada) get_chart(ch interface{}) {
 	chart := ch.get("chart", &foo{})
 	chart_source := chart.get("source", &foo{})
 	location := chart_source.get("location")
@@ -172,7 +173,7 @@ func (self *Armada) get_chart(self, ch) {
 		self.get_chart(dep)
 	}
 }
-func (self *Armada) sync(self) {
+func (self *Armada) sync() {
 	// """
 	// Synchronize Helm with the Armada Config(s)
 	// """
@@ -265,13 +266,13 @@ func (self *Armada) sync(self) {
 	return msg
 }
 
-func (self *Armada) deploy_chart(chart) {
+func (self *Armada) deploy_chart(chart interface{}) {
 	set_current_chart(chart)
 	return self.chart_deploy.execute(chart, cg_test_all_charts, prefix, known_releases)
 	set_current_chart(None)
 }
 
-func (self *Armada) handle_result(chart, get_result) {
+func (self *Armada) handle_result(chart interface{}, get_result interface{}) {
 	// Returns whether or not there was a failure
 	name := chart["chart_name"]
 	result := get_result()
@@ -285,7 +286,7 @@ func (self *Armada) handle_result(chart, get_result) {
 	}
 }
 
-func (self *Armada) post_flight_ops(self) {
+func (self *Armada) post_flight_ops() {
 	// """
 	// Operations to run after deployment process has terminated
 	// """
@@ -298,7 +299,7 @@ func (self *Armada) post_flight_ops(self) {
 	}
 
 }
-func (self *Armada) _chart_cleanup(self, prefix, charts, msg) {
+func (self *Armada) _chart_cleanup(prefix interface{}, charts interface{}, msg interface{}) {
 	LOG.info("Processing chart cleanup to remove unspecified releases.")
 
 	valid_releases := make([]interfaces{}, 0)

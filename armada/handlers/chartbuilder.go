@@ -85,7 +85,7 @@ func (self *ChartBuilder) get_ignored_files() {
 
 }
 
-func (self *ChartBuilder) ignore_file(self, filename) {
+func (self *ChartBuilder) ignore_file(filename interface{}) {
 	// """Returns whether a given ``filename`` should be ignored.
 
 	// :param filename: Filename to compare against list of ignored files.
@@ -102,7 +102,7 @@ func (self *ChartBuilder) ignore_file(self, filename) {
 	return False
 
 }
-func (self *ChartBuilder) get_metadata(self) {
+func (self *ChartBuilder) get_metadata() {
 	// """Extract metadata from Chart.yaml to construct an instance of
 	// :class:`hapi.chart.metadata_pb2.Metadata`.
 	// """
@@ -121,7 +121,7 @@ func (self *ChartBuilder) get_metadata(self) {
 		version:     chart_yaml.get("version")}
 
 }
-func (self *ChartBuilder) get_files(self) {
+func (self *ChartBuilder) get_files() {
 	// """
 	// Return (non-template) files in this chart.
 
@@ -144,7 +144,7 @@ func (self *ChartBuilder) get_files(self) {
 
 }
 
-func (self *ChartBuilder) _append_file_to_result(root, rel_folder_path, file) {
+func (self *ChartBuilder) _append_file_to_result(root interface{}, rel_folder_path interface{}, file interface{}) {
 	abspath := os.path.abspath(os.path.join(root, file))
 	relpath := os.path.join(rel_folder_path, file)
 
@@ -257,7 +257,7 @@ func (self *ChartBuilder) get_templates() {
 	return templates
 
 }
-func (self *ChartBuilder) get_helm_chart(self) {
+func (self *ChartBuilder) get_helm_chart() {
 	// """Return a Helm chart object.
 
 	// Constructs a :class:`hapi.chart.chart_pb2.Chart` object from the
@@ -295,7 +295,7 @@ func (self *ChartBuilder) get_helm_chart(self) {
 	return helm_chart
 }
 
-func (self *ChartBuilder) dump(self) {
+func (self *ChartBuilder) dump() {
 	// """Dumps a chart object as a serialized string so that we can perform a
 	// diff.
 

@@ -99,7 +99,7 @@ func (self *Test) init() {
 	}
 }
 
-func (self *Test) test_release_for_success(self) {
+func (self *Test) test_release_for_success() {
 	// """Run the Helm tests corresponding to a release for success (i.e. exit
 	// code 0).
 
@@ -127,7 +127,7 @@ func (self *Test) test_release_for_success(self) {
 	return success
 }
 
-func (self *Test) delete_test_pods(self) {
+func (self *Test) delete_test_pods() {
 	// """Deletes any existing test pods for the release, as identified by the
 	// wait labels for the chart, to avoid test pod name conflicts when
 	// creating the new test pod as well as just for general cleanup since

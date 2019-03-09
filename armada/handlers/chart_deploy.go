@@ -31,9 +31,16 @@ package armada
 // LOG := logging.getLogger(__name__)
 
 type ChartDeploy struct {
+	disable_update_pre     bool
+	disable_update_post    bool
+	dry_run                bool
+	k8s_wait_attempts      int
+	k8s_wait_attempt_sleep int
+	timeout                int
+	tiller                 interface{}
 }
 
-func (self *ChartDeploy) init(self, chart, cg_test_all_charts, prefix, known_releases) {
+func (self *ChartDeploy) init(chart interface{}, cg_test_all_charts interface{}, prefix interface{}, known_releases interface{}) {
 	self.disable_update_pre = disable_update_pre
 	self.disable_update_post = disable_update_post
 	self.dry_run = dry_run
@@ -43,7 +50,7 @@ func (self *ChartDeploy) init(self, chart, cg_test_all_charts, prefix, known_rel
 	self.tiller = tiller
 
 }
-func (self *ChartDeploy) execute(self, chart, cg_test_all_charts, prefix, known_releases) {
+func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface{}, prefix interface{}, known_releases interface{}) {
 	namespace := chart.get("namespace")
 	release := chart.get("release")
 	release_name := r.release_prefixer(prefix, release)
@@ -251,7 +258,7 @@ func (self *ChartDeploy) execute(self, chart, cg_test_all_charts, prefix, known_
 	return result
 
 }
-func (self *ChartDeploy) _test_chart(self, release_name, test_handler) {
+func (self *ChartDeploy) _test_chart(release_name interface{}, test_handler interface{}) {
 	if self.dry_run {
 		LOG.info(
 			"Skipping test during `dry-run`, would have tested release:=%s", release_name)
@@ -264,11 +271,11 @@ func (self *ChartDeploy) _test_chart(self, release_name, test_handler) {
 	}
 }
 
-func (self *ChartDeploy) get_diff(self, old_chart, old_values, new_chart, values) {
+func (self *ChartDeploy) get_diff(old_chart interface{}, old_values interface{}, new_chart interface{}, values interface{}) {
 	return ReleaseDiff(old_chart, old_values, new_chart, values).get_diff()
 }
 
-func (self *ChartDeploy) find_chart_release(self, known_releases, release_name) {
+func (self *ChartDeploy) find_chart_release(known_releases interface{}, release_name interface{}) {
 	// """
 	// Find a release given a list of known_releases and a release name
 	// """

@@ -73,7 +73,7 @@ func (self *ReferenceResolver) init() {
 }
 
 // @classmethod
-func (self *ReferenceResolver) resolve_reference_http(cls, design_uri) {
+func (self *ReferenceResolver) resolve_reference_http(cls interface{}, design_uri interface{}) {
 	// """Retrieve design documents from http/https endpoints.
 	// Return a byte array of the response content. Support
 	// unsecured or basic auth
@@ -96,7 +96,7 @@ func (self *ReferenceResolver) resolve_reference_http(cls, design_uri) {
 }
 
 // @classmethod
-func (self *ReferenceResolver) resolve_reference_file(cls, design_uri) {
+func (self *ReferenceResolver) resolve_reference_file(cls interface{}, design_uri interface{}) {
 	// """Retrieve design documents from local file endpoints.
 	// Return a byte array of the file contents
 	// :param design_uri: Tuple as returned by urllib.parse for the design
@@ -112,7 +112,7 @@ func (self *ReferenceResolver) resolve_reference_file(cls, design_uri) {
 }
 
 // @classmethod
-func (self *ReferenceResolver) resolve_reference_ucp(cls, design_uri) {
+func (self *ReferenceResolver) resolve_reference_ucp(cls interface{}, design_uri interface{}) {
 	// """Retrieve artifacts from a Airship service endpoint.
 	// Return a byte array of the response content. Assumes Keystone
 	// authentication required.

@@ -32,7 +32,7 @@ type ChartDelete struct {
 
 	chart         interface{}
 	release_name  interface{}
-	tiller        interface{}
+	tiller        *Tiller
 	purge         interface{}
 	delete_config interface{}
 	// TODO(seaneagan) { Consider allowing this to be a percentage of the

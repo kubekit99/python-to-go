@@ -144,8 +144,8 @@ func (self *K8s) _delete_item_action(list_func interface{}, delete_func interfac
 			object_type_description, name, timeout)
 		body := client.V1DeleteOptions()
 		w := watch.Watch()
-		issue_delete := True
-		found_events := False
+		issue_delete := true
+		found_events := false
 		for event := range w.stream(list_func, namespace, timeout) {
 			if issue_delete {
 				delete_func(
@@ -153,7 +153,7 @@ func (self *K8s) _delete_item_action(list_func interface{}, delete_func interfac
 					namespace,
 					body,
 					propagation_policy)
-				issue_delete := False
+				issue_delete := false
 			}
 
 			event_type := event["type"].upper()
@@ -161,9 +161,9 @@ func (self *K8s) _delete_item_action(list_func interface{}, delete_func interfac
 			LOG.debug("Watch event %s on %s", event_type, item_name)
 
 			if item_name == name {
-				found_events := True
+				found_events := true
 				if event_type == "DELETED" {
-					LOG.info("Successfully deleted %s %s",
+					LOG.Info("Successfully deleted %s %s",
 						object_type_description, item_name)
 					return
 				}
@@ -176,7 +176,7 @@ func (self *K8s) _delete_item_action(list_func interface{}, delete_func interfac
 		}
 
 		err_msg := "Reached timeout while waiting to delete %s: name:=%s, namespace:=%s % (object_type_description, name, namespace)"
-		LOG.error(err_msg)
+		LOG.Error(err_msg)
 		return exceptions.KubernetesWatchTimeoutException(err_msg)
 	}
 
@@ -193,7 +193,7 @@ func (self *K8s) get_namespace_job(namespace interface{}, kwargs interface{}) {
 
 	res, err := self.batch_api.list_namespaced_job(namespace, **kwargs)
 	if err != nil {
-		LOG.error("Exception getting jobs: namespace:=%s, label:=%s: %s",
+		LOG.Error("Exception getting jobs: namespace:=%s, label:=%s: %s",
 			namespace, kwargs.get("label_selector", ""), e)
 	}
 	return res
@@ -208,7 +208,7 @@ func (self *K8s) get_namespace_cron_job(namespace interface{}, kwargs interface{
 	res, err := self.batch_v1beta1_api.list_namespaced_cron_job(
 		namespace, **kwargs)
 	if err != nil {
-		LOG.error(
+		LOG.Error(
 			"Exception getting cron jobs: namespace:=%s, label:=%s: %s",
 			namespace, kwargs.get("label_selector", ""), e)
 	}
@@ -285,7 +285,7 @@ func (self *K8s) wait_for_pod_redeployment(old_pod_name interface{}, namespace i
 	base_pod_pattern := re.compile("^(.+)-[a-zA-Z0-9]+$")
 
 	if !base_pod_pattern.match(old_pod_name) {
-		LOG.error("Could not identify new pod after purging %s",
+		LOG.Error("Could not identify new pod after purging %s",
 			old_pod_name)
 		return
 	}
@@ -308,8 +308,8 @@ func (self *K8s) wait_for_pod_redeployment(old_pod_name interface{}, namespace i
 			new_pod_name := event_name
 		} else if new_pod_name {
 			for condition := range pod_conditions {
-				if condition.typef == "Ready" && condition.status == "True" {
-					LOG.info("New pod %s deployed", new_pod_name)
+				if condition.typef == "Ready" && condition.status == "true" {
+					LOG.Info("New pod %s deployed", new_pod_name)
 					w.stop()
 				}
 			}
@@ -325,13 +325,13 @@ func (self *K8s) wait_get_completed_podphase(release interface{}, timeout interf
 	timeout = self._check_timeout(timeout)
 
 	w := watch.Watch()
-	found_events := False
+	found_events := false
 	for event := range w.stream(self.client.list_pod_for_all_namespaces, timeout) {
 		resource_name := event["object"].metadata.name
 
 		// JEB if release in resource_name {
 		if true {
-			found_events := True
+			found_events := true
 			pod_state := event["object"].status.phase
 			if pod_state == "Succeeded" {
 				w.stop()

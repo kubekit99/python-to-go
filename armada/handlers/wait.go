@@ -62,7 +62,7 @@ type ChartWait struct {
 	//         waits.append(self.get_resource_wait(resource_config))
 	// } else {
 	//     waits := [
-	//         JobWait("job", self, labels, skip_if_none_found:=True),
+	//         JobWait("job", self, labels, skip_if_none_found:=true),
 	//         PodWait("pod", self, labels)
 	//     ]
 	// self.waits := waits
@@ -82,7 +82,7 @@ type ChartWait struct {
 	//         wait_timeout := deprecated_timeout
 
 	// if wait_timeout is None {
-	//     LOG.info("No Chart timeout specified, using default: %ss",
+	//     LOG.Info("No Chart timeout specified, using default: %ss",
 	//              const.DEFAULT_CHART_TIMEOUT)
 	//     wait_timeout := const.DEFAULT_CHART_TIMEOUT
 
@@ -96,7 +96,7 @@ func (self *ChartWait) get_timeout() {
 
 func (self *ChartWait) is_native_enabled() {
 	native_wait := self.wait_config.get("native", &foo{})
-	return native_wait.get("enabled", True)
+	return native_wait.get("enabled", true)
 
 }
 
@@ -165,7 +165,7 @@ func (self *ResourceWait) include_resource(resource interface{}) {
 	// :param resource: resource to test
 	// :returns: boolean representing test result
 	// """
-	return True
+	return true
 }
 
 func (self *ResourceWait) handle_resource(resource interface{}) {
@@ -185,7 +185,7 @@ func (self *ResourceWait) handle_resource(resource interface{}) {
 	if err != nil {
 		LOG.warn("Resource %s unlikely to become ready: %s", resource_name,
 			e)
-		return False
+		return false
 	}
 }
 
@@ -194,7 +194,7 @@ func (self *ResourceWait) wait(timeout interface{}) {
 	// :param timeout: time before disconnecting ``Watch`` stream
 	// """
 
-	LOG.info(
+	LOG.Info(
 		"Waiting for resource type:=%s, namespace:=%s labels:=%s for %ss (k8s wait %s times, sleep %ss)", self.resource_type,
 		self.chart_wait.namespace, self.label_selector, timeout,
 		self.chart_wait.k8s_wait_attempts,
@@ -216,7 +216,7 @@ func (self *ResourceWait) wait(timeout interface{}) {
 			error := ("Timed out waiting for resource type:={}, namespace:={}, labels:={}".format(self.resource_type,
 				self.chart_wait.namespace,
 				self.label_selector))
-			LOG.error(error)
+			LOG.Error(error)
 			return k8s_exceptions.KubernetesWatchTimeoutException(error)
 		}
 
@@ -237,7 +237,7 @@ func (self *ResourceWait) wait(timeout interface{}) {
 		if timed_out && found_resources {
 			error := "Timed out waiting for resources:={}".format(
 				sorted(unready))
-			LOG.error(error)
+			LOG.Error(error)
 			return k8s_exceptions.KubernetesWatchTimeoutException(error)
 		}
 
@@ -258,7 +258,7 @@ func (self *ResourceWait) wait(timeout interface{}) {
 			self.chart_wait.k8s_wait_attempts)
 		time.sleep(self.chart_wait.k8s_wait_attempt_sleep)
 	}
-	return True
+	return true
 
 }
 func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
@@ -271,7 +271,7 @@ func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
 		self.resource_type, self.label_selector, timeout)
 	ready := &foo{}
 	modified := set()
-	found_resources := False
+	found_resources := false
 
 	kwargs := &foo{
 		"namespace":       self.chart_wait.namespace,
@@ -290,12 +290,12 @@ func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
 		if self.skip_if_none_found {
 			msg := "Skipping wait, no %s resources found."
 			LOG.debug(msg, self.resource_type)
-			return False, modified, nil, found_resources
+			return false, modified, nil, found_resources
 		}
 	} else {
-		found_resources := True
+		found_resources := true
 		if all(ready.values()) {
-			return False, modified, nil, found_resources
+			return false, modified, nil, found_resources
 		}
 	}
 	// Only watch new events.
@@ -318,7 +318,7 @@ func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
 			self.chart_wait.namespace, resource_version)
 
 		if event_type == "ADDED" || event_type == "MODIFIED" {
-			found_resources := True
+			found_resources := true
 			resource_ready := self.handle_resource(resource)
 			ready[resource_name] = resource_ready
 
@@ -330,22 +330,22 @@ func (self *ResourceWait) _watch_resource_completions(timeout interface{}) {
 			ready.pop(resource_name)
 
 		} else if event_type == "ERROR" {
-			LOG.error("Resource %s: Got error event %s", resource_name,
+			LOG.Error("Resource %s: Got error event %s", resource_name,
 				event["object"].to_dict())
 			return k8s_exceptions.KubernetesErrorEventException(
 				"Got error event for resource: %s" % event["object"])
 		} else {
-			LOG.error("Unrecognized event type (%s) for resource: %s",
+			LOG.Error("Unrecognized event type (%s) for resource: %s",
 				event_type, event["object"])
 			return k8s_exceptions.
 				KubernetesUnknownStreamingEventTypeException("Got unknown event type (%s) for resource: %s", nil)
 		}
 
 		if all(ready.values()) {
-			return False, modified, nil, found_resources
+			return false, modified, nil, found_resources
 		}
 
-		// JEB return True, modified, [name for name, is_ready in ready.items() if ! is_ready], found_resources
+		// JEB return true, modified, [name for name, is_ready in ready.items() if ! is_ready], found_resources
 		return nil
 
 	}
@@ -386,17 +386,17 @@ func (self *PodWait) is_resource_ready(resource interface{}) {
 	phase := status.phase
 
 	if phase == "Succeeded" {
-		return "Pod {} succeeded".format(name), True
+		return "Pod {} succeeded".format(name), true
 	}
 
 	if phase == "Running" {
 		cond := self._get_resource_condition(status.conditions, "Ready")
-		if cond && cond.status == "True" {
-			return "Pod {} ready".format(name), True
+		if cond && cond.status == "true" {
+			return "Pod {} ready".format(name), true
 		}
 	}
 	msg := "Waiting for pod {} to be ready..."
-	return msg.format(name), False
+	return msg.format(name), false
 }
 
 type JobWait struct {
@@ -412,10 +412,10 @@ func (self *JobWait) is_resource_ready(resource interface{}) {
 
 	if expected != completed {
 		msg := "Waiting for job {} to be successfully completed..."
-		return msg.format(name), False
+		return msg.format(name), false
 	}
 	msg := "job {} successfully completed"
-	return msg.format(name), True
+	return msg.format(name), true
 }
 
 // JEB var CountOrPercent = collections.namedtuple("CountOrPercent", "number is_percent source")
@@ -435,13 +435,13 @@ func (self *ControllerWait) __init__(resource_type interface{}, chart_wait inter
 		match := re.match("(.*)%$", min_ready)
 		if match {
 			min_ready_percent := int(match.group(1))
-			self.min_ready = CountOrPercent(min_ready_percent, True, min_ready)
+			self.min_ready = CountOrPercent(min_ready_percent, true, min_ready)
 		} else {
 			return manifest_exceptions.ManifestException(
 				"`min_ready` as string must be formatted as a percent e.g. 80%")
 		}
 	} else {
-		min_ready := CountOrPercent(min_ready, False, min_ready)
+		min_ready := CountOrPercent(min_ready, false, min_ready)
 	}
 
 }
@@ -472,7 +472,7 @@ func (self *DeploymentWait) is_resource_ready(resource interface{}) {
 			"Progressing")
 		if cond && (cond.reason || "") == "ProgressDeadlineExceeded" {
 			msg := "deployment {} exceeded its progress deadline"
-			return "", False, msg.format(name)
+			return "", false, msg.format(name)
 		}
 
 		replicas := spec.replicas                       // JEB or 0
@@ -480,26 +480,26 @@ func (self *DeploymentWait) is_resource_ready(resource interface{}) {
 		available_replicas := status.available_replicas // JEB or 0
 		if updated_replicas < replicas {
 			msg := ("Waiting for deployment {} rollout to finish: {} out of {} new replicas have been updated...")
-			return msg.format(name, updated_replicas, replicas), False
+			return msg.format(name, updated_replicas, replicas), false
 		}
 
 		if replicas > updated_replicas {
 			msg := ("Waiting for deployment {} rollout to finish: {} old replicas are pending termination...")
 			pending := replicas - updated_replicas
-			return msg.format(name, pending), False
+			return msg.format(name, pending), false
 		}
 
 		if !self._is_min_ready(available_replicas, updated_replicas) {
 			msg := ("Waiting for deployment {} rollout to finish: {} of {} updated replicas are available, with min_ready:={}")
-			return msg.format(name, available_replicas, updated_replicas, self.min_ready.source), False, None
+			return msg.format(name, available_replicas, updated_replicas, self.min_ready.source), false, None
 		}
 
 		msg := "deployment {} successfully rolled out\n"
-		return msg.format(name), True
+		return msg.format(name), true
 	}
 
 	msg := "Waiting for deployment spec update to be observed..."
-	return msg.format(), False
+	return msg.format(), false
 }
 
 type DaemonSetWait struct {
@@ -527,21 +527,21 @@ func (self *DaemonSetWait) is_resource_ready(resource interface{}) {
 	if gen <= observed_gen {
 		if updated_number_scheduled < desired_number_scheduled {
 			msg := ("Waiting for daemon set {} rollout to finish: {} out of {} new pods have been updated...")
-			return msg.format(name, updated_number_scheduled, desired_number_scheduled), False
+			return msg.format(name, updated_number_scheduled, desired_number_scheduled), false
 		}
 
 		if !self._is_min_ready(number_available,
 			desired_number_scheduled) {
 			msg := ("Waiting for daemon set {} rollout to finish: {} of {} updated pods are available, with min_ready:={}")
-			return msg.format(name, number_available, desired_number_scheduled, self.min_ready.source), False
+			return msg.format(name, number_available, desired_number_scheduled, self.min_ready.source), false
 		}
 
 		msg := "daemon set {} successfully rolled out"
-		return msg.format(name), True
+		return msg.format(name), true
 	}
 
 	msg := "Waiting for daemon set spec update to be observed..."
-	return msg.format(), False
+	return msg.format(), false
 }
 
 type StatefulSetWait struct {
@@ -566,7 +566,7 @@ func (self *StatefulSetWait) is_resource_ready(resource interface{}) {
 	observed_gen := status.observed_generation // JEB or 0
 	if observed_gen == 0 || gen > observed_gen {
 		msg := "Waiting for statefulset spec update to be observed..."
-		return msg, False
+		return msg, false
 	}
 
 	replicas := spec.replicas                   // JEB or 0
@@ -577,14 +577,14 @@ func (self *StatefulSetWait) is_resource_ready(resource interface{}) {
 	if replicas && !self._is_min_ready(ready_replicas, replicas) {
 		msg := ("Waiting for statefulset {} rollout to finish: {} of {} pods are ready, with min_ready:={}")
 		return msg.format(name, ready_replicas, replicas,
-			self.min_ready.source), False
+			self.min_ready.source), false
 	}
 
 	if update_strategy_type == ROLLING_UPDATE_STRATEGY_TYPE &&
 		spec.update_strategy.rolling_update {
 		if replicas && spec.update_strategy.rolling_update.partition {
 			msg := ("Waiting on partitioned rollout not supported, assuming non-readiness of statefulset {}")
-			return msg.format(name), False
+			return msg.format(name), false
 		}
 	}
 
@@ -593,9 +593,9 @@ func (self *StatefulSetWait) is_resource_ready(resource interface{}) {
 
 	if update_revision != current_revision {
 		msg := ("waiting for statefulset rolling update to complete {} pods at revision {}...")
-		return msg.format(updated_replicas, update_revision), False
+		return msg.format(updated_replicas, update_revision), false
 	}
 
 	msg := "statefulset rolling update complete {} pods at revision {}..."
-	return msg.format(current_replicas, current_revision), True
+	return msg.format(current_replicas, current_revision), true
 }

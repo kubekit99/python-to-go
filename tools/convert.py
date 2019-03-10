@@ -26,9 +26,10 @@ def changesignature(signature):
     newsignature = signature
     if "()" in newsignature:
         return newsignature
-    newsignature = newsignature.replace(","," interface{},")
-    newsignature = newsignature.replace(") {"," interface{}) {")
+    newsignature = newsignature.replace(",", " interface{},")
+    newsignature = newsignature.replace(") {", " interface{}) {")
     return newsignature
+
 
 def changefunc(filename):
     pattern = re.compile("^func \(")
@@ -45,6 +46,25 @@ def changefunc(filename):
     shutil.copystat(filename, tmp_file.name)
     shutil.move(tmp_file.name, filename + ".new")
 
+
+def emulatesed(filename):
+    sedfile = [
+        [re.compile("LOG.info"), "Log.Info"],
+        [re.compile("LOG.error"), "Log.Error"],
+        [re.compile("False"), "false"],
+        [re.compile("True"), "true"]]
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        with open(filename) as src_file:
+            for line in src_file:
+                for sedcommand in sedfile:
+                    line = sedcommand[0].sub(sedcommand[1], line)
+                tmp_file.write(line)
+
+    shutil.copystat(filename, tmp_file.name)
+    shutil.move(tmp_file.name, filename + ".new")
+
+
 if __name__ == "__main__":
     if os.path.isfile(".settings.yaml"):
         with open('.settings.yaml') as stream2:
@@ -58,8 +78,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--command',
                         help="Command to run",
-                        type=str, choices=["changefunc"],
-                        default="changefunc")
+                        type=str, choices=["changefunc", "emulatesed"],
+                        default="emulatesed")
     parser.add_argument('-f', '--filename',
                         help="Go file",
                         type=str,
@@ -69,5 +89,7 @@ if __name__ == "__main__":
 
     if (args.command == "changefunc"):
         changefunc(args.filename)
+    elif (args.command == "emulatesed"):
+        emulatesed(args.filename)
     else:
         pass

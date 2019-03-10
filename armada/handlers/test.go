@@ -45,10 +45,10 @@ type Test struct {
 
 	chart        interface{}
 	release_name interface{}
-	tiller       interface{}
+	tiller       *Tiller
 	cleanup      interface{}
-	k8s_timeout  interface{}
-	timeout      interface{}
+	k8s_timeout  int
+	timeout      int
 }
 
 func (self *Test) init() {
@@ -60,7 +60,7 @@ func (self *Test) init() {
 		LOG.warn("Chart group key `test_charts` is deprecated and will be removed. Use `test.enabled` instead.")
 		self.test_enabled = cg_test_charts
 	} else {
-		self.test_enabled = True
+		self.test_enabled = true
 	}
 
 	// NOTE: Support old, boolean `test` key until deprecation period ends.
@@ -69,10 +69,10 @@ func (self *Test) init() {
 
 		self.test_enabled = test_values
 
-		// NOTE: Use old, default cleanup value (i.e. True) if none is
+		// NOTE: Use old, default cleanup value (i.e. true) if none is
 		// provided.
 		if self.cleanup {
-			self.cleanup = True
+			self.cleanup = true
 		}
 	} else if test_values {
 		test_enabled_opt := test_values.get("enabled")
@@ -84,18 +84,18 @@ func (self *Test) init() {
 		// `test.cleanup`.
 		if self.cleanup {
 			test_options := test_values.get("options", &foo{})
-			self.cleanup = test_options.get("cleanup", False)
+			self.cleanup = test_options.get("cleanup", false)
 		}
 		self.timeout = test_values.get("timeout", self.timeout)
 	} else {
 		// Default cleanup value
 		if self.cleanup {
-			self.cleanup = False
+			self.cleanup = false
 		}
 	}
 
 	if enable_all {
-		self.test_enabled = True
+		self.test_enabled = true
 	}
 }
 
@@ -105,7 +105,7 @@ func (self *Test) test_release_for_success() {
 
 	// :return: Helm test suite run result
 	// """
-	LOG.info("RUNNING: %s tests with timeout:=%ds", self.release_name,
+	LOG.Info("RUNNING: %s tests with timeout:=%ds", self.release_name,
 		self.timeout)
 
 	self.delete_test_pods()
@@ -119,9 +119,9 @@ func (self *Test) test_release_for_success() {
 
 	success := get_test_suite_run_success(test_suite_run)
 	if success {
-		LOG.info("PASSED: %s", self.release_name)
+		LOG.Info("PASSED: %s", self.release_name)
 	} else {
-		LOG.info("FAILED: %s", self.release_name)
+		LOG.Info("FAILED: %s", self.release_name)
 	}
 
 	return success
@@ -153,13 +153,13 @@ func (self *Test) delete_test_pods() {
 		test_pods := make([]interface{}, 0)
 
 		if test_pods {
-			LOG.info(
+			LOG.Info(
 				"Found existing test pods for release with namespace:=%s, labels:=(%s)", namespace, label_selector)
 		}
 
 		for test_pod := range test_pods {
 			pod_name := test_pod.metadata.name
-			LOG.info("Deleting existing test pod: %s", pod_name)
+			LOG.Info("Deleting existing test pod: %s", pod_name)
 			self.tiller.k8s.delete_pod_action(
 				pod_name, namespace, self.k8s_timeout)
 		}

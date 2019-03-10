@@ -85,7 +85,7 @@ type Tiller struct {
 	tiller_port      int    // JEB or CONF.tiller_port
 	tiller_namespace string // JEB or CONF.tiller_namespace
 	bearer_token     string
-	dry_run          bool // JEB or False
+	dry_run          bool // JEB or false
 
 	// init k8s connectivity
 	k8s interface{}
@@ -104,7 +104,7 @@ func (self *Tiller) __init__(tiller_host interface{}, tiller_port interface{}, t
 	self.tiller_port = tiller_port           // JEB or CONF.tiller_port
 	self.tiller_namespace = tiller_namespace // JEB or CONF.tiller_namespace
 	self.bearer_token = bearer_token
-	self.dry_run = dry_run // JEB or False
+	self.dry_run = dry_run // JEB or false
 
 	// init k8s connectivity
 	self.k8s = K8s(self.bearer_token)
@@ -190,28 +190,28 @@ func (self *Tiller) _get_tiller_ip() {
 	}
 
 }
-func (self *Tiller) _get_tiller_port() {
+func (self *Tiller) _get_tiller_port() int {
 	// """Stub method to support arbitrary ports in the future"""
 	LOG.debug("Using Tiller host port: %s", self.tiller_port)
 	return self.tiller_port
 
 }
-func (self *Tiller) _get_tiller_namespace() {
+func (self *Tiller) _get_tiller_namespace() string {
 	LOG.debug("Using Tiller namespace: %s", self.tiller_namespace)
 	return self.tiller_namespace
 
 }
-func (self *Tiller) tiller_status() {
+func (self *Tiller) tiller_status() bool {
 	// """
 	// return if Tiller exist or not
 	// """
 	if self._get_tiller_ip() {
 		LOG.debug("Getting Tiller Status: Tiller exists")
-		return True
+		return true
 	}
 
 	LOG.debug("Getting Tiller Status: Tiller does not exist")
-	return False
+	return false
 
 }
 func (self *Tiller) list_releases() {
@@ -253,7 +253,7 @@ func (self *Tiller) list_releases() {
 				latest_versions[r.name] = r.version
 			}
 
-			latest_releases := make([]interfaces{}, 0)
+			latest_releases := make([]interface{}, 0)
 			for r := range releases {
 				if latest_versions[r.name] == r.version {
 					LOG.debug("Found release %s, version %s, status: %s",
@@ -268,8 +268,8 @@ func (self *Tiller) list_releases() {
 }
 
 func (self *Tiller) get_results() {
-	releases := make([]interfaces{}, 0)
-	done := False
+	releases := make([]interface{}, 0)
+	done := false
 	next_release_expected := ""
 	initial_total := None
 	for {
@@ -283,9 +283,9 @@ func (self *Tiller) get_results() {
 		response := stub.ListReleases(
 			req, self.timeout, self.metadata)
 
-		found_message := False
+		found_message := false
 		for message := range response {
-			found_message := True
+			found_message := true
 			page := message.releases
 
 			if initial_total {
@@ -305,14 +305,14 @@ func (self *Tiller) get_results() {
 			if message.next {
 				next_release_expected := message.next
 			} else {
-				done := True
+				done := true
 			}
 		}
 
 		// Ensure we break out was no message found which
 		// is seen if there are no releases in tiller.
 		if !found_message {
-			done := True
+			done := true
 		}
 	}
 
@@ -322,25 +322,25 @@ func (self *Tiller) get_results() {
 func (self *Tiller) get_chart_templates(template_name interface{}, name interface{}, release_name interface{}, namespace interface{}, chart interface{}, disable_hooks interface{}, values interface{}) {
 	// returns some info
 
-	LOG.info("Template( %s ) : %s ", template_name, name)
+	LOG.Info("Template( %s ) : %s ", template_name, name)
 
 	stub := ReleaseServiceStub(self.channel)
 	release_request := InstallReleaseRequest(
 		chart,
-		True,
+		true,
 		values,
 		name,
 		namespace,
-		False)
+		false)
 
 	templates := stub.InstallRelease(
 		release_request, self.timeout, self.metadata)
 
 	for template := range yaml.load_all(
-		getattr(templates.release, "manifest", make([]interfaces{}, 0))) {
+		getattr(templates.release, "manifest", make([]interface{}, 0))) {
 		if template_name == template.get("metadata", None).get(
 			"name", None) {
-			LOG.info(template_name)
+			LOG.Info(template_name)
 			return template
 		}
 	}
@@ -353,9 +353,9 @@ func (self *Tiller) _pre_update_actions(actions interface{}, release_name interf
 	// """
 
 	{
-		for action := range actions.get("update", make([]interfaces{}, 0)) {
+		for action := range actions.get("update", make([]interface{}, 0)) {
 			name := action.get("name")
-			LOG.info("Updating %s ", name)
+			LOG.Info("Updating %s ", name)
 			action_type := action.get("type")
 			labels := action.get("labels")
 
@@ -375,7 +375,7 @@ func (self *Tiller) _pre_update_actions(actions interface{}, release_name interf
 	}
 
 	{
-		for action := range actions.get("delete", make([]interfaces{}, 0)) {
+		for action := range actions.get("delete", make([]interface{}, 0)) {
 			name := action.get("name")
 			action_type := action.get("type")
 			labels := action.get("labels", None)
@@ -403,7 +403,7 @@ func (self *Tiller) list_charts() {
 	// (name, version, chart, values, status)
 	// """
 	LOG.debug("Getting known releases from Tiller...")
-	charts := make([]interfaces{}, 0)
+	charts := make([]interface{}, 0)
 	for latest_release := range self.list_releases() {
 		{
 			release := []string{latest_release.name, latest_release.version,
@@ -427,7 +427,7 @@ func (self *Tiller) update_release(chart interface{}, release interface{}, names
 	// """
 	timeout = self._check_timeout(wait, timeout)
 
-	LOG.info(
+	LOG.Info(
 		"Helm update release%s: wait:=%s, timeout:=%s, force:=%s, recreate_pods:=%s",
 		// JEB (" (dry run)" if self.dry_run else ""), wait,
 		timeout, force, recreate_pods)
@@ -484,7 +484,7 @@ func (self *Tiller) install_release(chart interface{}, release interface{}, name
 	// """
 	timeout = self._check_timeout(wait, timeout)
 
-	LOG.info("Helm install release%s: wait:=%s, timeout:=%s",
+	LOG.Info("Helm install release%s: wait:=%s, timeout:=%s",
 		// JEB (" (dry run)" if self.dry_run else ""),
 		wait, timeout)
 
@@ -537,7 +537,7 @@ func (self *Tiller) test_release(release interface{}, timeout interface{}, clean
 	// :returns: test suite run object
 	// """
 
-	LOG.info("Running Helm test: release:=%s, timeout:=%s", release, timeout)
+	LOG.Info("Running Helm test: release:=%s, timeout:=%s", release, timeout)
 
 	{
 		stub := ReleaseServiceStub(self.channel)
@@ -558,10 +558,10 @@ func (self *Tiller) test_release(release interface{}, timeout interface{}, clean
 			if test_message.status == helm.TESTRUN_STATUS_FAILURE {
 				failed += 1
 			}
-			LOG.info(test_message.msg)
+			LOG.Info(test_message.msg)
 		}
 		if failed {
-			LOG.info("{} test(s) failed".format(failed))
+			LOG.Info("{} test(s) failed".format(failed))
 		}
 
 		status := self.get_release_status(release)
@@ -663,7 +663,7 @@ func (self *Tiller) uninstall_release(release interface{}, disable_hooks interfa
 	// Helm client calls ReleaseContent in Delete dry-run scenario
 	if self.dry_run {
 		content := self.get_release_content(release)
-		LOG.info(
+		LOG.Info(
 			"Skipping delete during `dry-run`, would have deleted release:=%s from namespace:=%s.", content.release.name,
 			content.release.namespace)
 		return
@@ -672,7 +672,7 @@ func (self *Tiller) uninstall_release(release interface{}, disable_hooks interfa
 	// build release uninstall request
 	{
 		stub := ReleaseServiceStub(self.channel)
-		LOG.info(
+		LOG.Info(
 			"Delete %s release with disable_hooks:=%s, purge:=%s, timeout:=%s flags", release, disable_hooks, purge,
 			timeout)
 		release_request := UninstallReleaseRequest{
@@ -707,7 +707,7 @@ func (self *Tiller) delete_resources(resource_type interface{}, resource_labels 
 	LOG.debug(
 		"Deleting resources in namespace %s matching selectors (%s).", namespace, label_selector)
 
-	handled := False
+	handled := false
 	if resource_type == "job" {
 		get_jobs := self.k8s.get_namespace_job(
 			namespace, label_selector)
@@ -715,17 +715,17 @@ func (self *Tiller) delete_resources(resource_type interface{}, resource_labels 
 			jb_name := jb.metadata.name
 
 			if self.dry_run {
-				LOG.info(
+				LOG.Info(
 					"Skipping delete job during `dry-run`, would have deleted job %s in namespace:=%s.", jb_name,
 					namespace)
 				continue
 			}
 
-			LOG.info("Deleting job %s in namespace: %s", jb_name,
+			LOG.Info("Deleting job %s in namespace: %s", jb_name,
 				namespace)
 			self.k8s.delete_job_action(jb_name, namespace, timeout)
 		}
-		handled := True
+		handled := true
 	}
 
 	if resource_type == "cronjob" || resource_type == "job" {
@@ -741,17 +741,17 @@ func (self *Tiller) delete_resources(resource_type interface{}, resource_labels 
 			}
 
 			if self.dry_run {
-				LOG.info(
+				LOG.Info(
 					"Skipping delete cronjob during `dry-run`, would have deleted cronjob %s in namespace:=%s.", jb_name,
 					namespace)
 				continue
 			}
 
-			LOG.info("Deleting cronjob %s in namespace: %s", jb_name,
+			LOG.Info("Deleting cronjob %s in namespace: %s", jb_name,
 				namespace)
 			self.k8s.delete_cron_job_action(jb_name, namespace)
 		}
-		handled := True
+		handled := true
 	}
 
 	if resource_type == "pod" {
@@ -761,24 +761,24 @@ func (self *Tiller) delete_resources(resource_type interface{}, resource_labels 
 			pod_name := pod.metadata.name
 
 			if self.dry_run {
-				LOG.info(
+				LOG.Info(
 					"Skipping delete pod during `dry-run`, would have deleted pod %s in namespace:=%s.", pod_name,
 					namespace)
 				continue
 			}
 
-			LOG.info("Deleting pod %s in namespace: %s", pod_name,
+			LOG.Info("Deleting pod %s in namespace: %s", pod_name,
 				namespace)
 			self.k8s.delete_pod_action(pod_name, namespace)
 			if wait {
 				self.k8s.wait_for_pod_redeployment(pod_name, namespace)
 			}
 		}
-		handled := True
+		handled := true
 	}
 
 	if !handled {
-		LOG.error("No resources found with labels:=%s type:=%s namespace:=%s",
+		LOG.Error("No resources found with labels:=%s type:=%s namespace:=%s",
 			resource_labels, resource_type, namespace)
 	}
 
@@ -790,7 +790,7 @@ func (self *Tiller) rolling_upgrade_pod_deployment(name interface{}, release_nam
 
 	if action_type == "daemonset" {
 
-		LOG.info("Updating: %s", action_type)
+		LOG.Info("Updating: %s", action_type)
 
 		label_selector := ""
 
@@ -805,7 +805,7 @@ func (self *Tiller) rolling_upgrade_pod_deployment(name interface{}, release_nam
 			ds_name := ds.metadata.name
 			ds_labels := ds.metadata.labels
 			if ds_name == name {
-				LOG.info("Deleting %s : %s in %s", action_type, ds_name,
+				LOG.Info("Deleting %s : %s in %s", action_type, ds_name,
 					namespace)
 				self.k8s.delete_daemon_action(ds_name, namespace)
 
@@ -824,13 +824,13 @@ func (self *Tiller) rolling_upgrade_pod_deployment(name interface{}, release_nam
 					"pod",
 					resource_labels,
 					namespace,
-					True,
+					true,
 					timeout)
 			}
 		}
 
 	} else {
-		LOG.error("Unable to exectue name: % type: %s", name, action_type)
+		LOG.Error("Unable to exectue name: % type: %s", name, action_type)
 	}
 
 }

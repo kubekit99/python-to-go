@@ -56,7 +56,7 @@ func (self *Manifest) init() {
 
 	if len(manifests) > 1 {
 		err := ("Multiple manifests are not supported. Ensure that the `target_manifest` option is set to specify the target manifest")
-		LOG.error(err)
+		LOG.Error(err)
 		return exceptions.ManifestException(err)
 	} else {
 		self.manifest = manifests[0] // JEB if manifests else None
@@ -66,7 +66,7 @@ func (self *Manifest) init() {
 	if false {
 		expected_schemas := []string{const_DOCUMENT_CHART, const_DOCUMENT_GROUP}
 		err := ("Documents must be a list of documents with at least one of each of the following schemas: %s and only one manifest % expected_schemas")
-		LOG.error(err)
+		LOG.Error(err)
 		return exceptions.ManifestException(err)
 	}
 }

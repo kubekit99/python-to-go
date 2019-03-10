@@ -89,17 +89,17 @@ func (self *ChartBuilder) ignore_file(filename interface{}) {
 	// """Returns whether a given ``filename`` should be ignored.
 
 	// :param filename: Filename to compare against list of ignored files.
-	// :returns: True if file matches an ignored file wildcard or exact name,
-	//           False otherwise.
+	// :returns: true if file matches an ignored file wildcard or exact name,
+	//           false otherwise.
 	// """
 	for ignored_file := range self.ignored_files {
 		if ignored_file.startswith("*") && filename.endswith(ignored_file.strip("*")) {
-			return True
+			return true
 		} else if ignored_file == filename {
-			return True
+			return true
 		}
 	}
-	return False
+	return false
 
 }
 func (self *ChartBuilder) get_metadata() {
@@ -236,7 +236,7 @@ func (self *ChartBuilder) get_templates() {
 		LOG.warn(
 			"Chart %s has no templates directory. No templates will be deployed", chart_name)
 	}
-	for _, files := range os.walk(os.path.join(self.source_directory, "templates"), True) {
+	for _, files := range os.walk(os.path.join(self.source_directory, "templates"), true) {
 		for tpl_file := range files {
 			tname := os.path.relpath(
 				os.path.join(root, tpl_file),
@@ -273,7 +273,7 @@ func (self *ChartBuilder) get_helm_chart() {
 	for dep := range chart_dependencies {
 		dep_chart := dep.get("chart", &foo{})
 		dep_chart_name := dep_chart.get("chart_name", None)
-		LOG.info("Building dependency chart %s for release %s.",
+		LOG.Info("Building dependency chart %s for release %s.",
 			dep_chart_name, chart_release)
 		dependencies.append(ChartBuilder(dep_chart).get_helm_chart())
 		if err != nil {

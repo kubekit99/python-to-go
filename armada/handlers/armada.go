@@ -62,13 +62,13 @@ type Armada struct {
 	//     between attempts.
 	// """
 	enable_chart_cleanup interface{}
-	dry_run interface{}
-	force_wait interface{}
-	tiller interface{}
-	documents interface{}
-	manifest interface{}
-	chart_cache interface{}
-	chart_deploy interface{}
+	dry_run              interface{}
+	force_wait           interface{}
+	tiller               *Tiller
+	documents            interface{}
+	manifest             *Manifest
+	chart_cache          interface{}
+	chart_deploy         interface{}
 }
 
 func (self *Armada) init() {
@@ -88,7 +88,7 @@ func (self *Armada) pre_flight_ops() {
 	// """Perform a series of checks and operations to ensure proper
 	// deployment.
 	// """
-	LOG.info("Performing pre-flight operations.")
+	LOG.Info("Performing pre-flight operations.")
 
 	// Ensure Tiller is available and manifest is valid
 	if !self.tiller.tiller_status() {
@@ -97,8 +97,8 @@ func (self *Armada) pre_flight_ops() {
 
 	// Clone the chart sources
 	manifest_data := self.manifest.get(const_KEYWORD_ARMADA, &foo{})
-	for group := range manifest_data.get(const_KEYWORD_GROUPS, make([]interfaces{}, 0)) {
-		for ch := range group.get(const_KEYWORD_CHARTS, make([]interfaces{}, 0)) {
+	for group := range manifest_data.get(const_KEYWORD_GROUPS, make([]interface{}, 0)) {
+		for ch := range group.get(const_KEYWORD_CHARTS, make([]interface{}, 0)) {
 			self.get_chart(ch)
 		}
 	}
@@ -127,11 +127,11 @@ func (self *Armada) get_chart(ch interface{}) {
 		source_key := []string{ct_type, location}
 
 		if !(stringInSlice(source_key, self.chart_cache)) {
-			LOG.info("Downloading tarball from: %s", location)
+			LOG.Info("Downloading tarball from: %s", location)
 
 			if !CONF.certs {
 				LOG.warn("Disabling server validation certs to extract charts")
-				tarball_dir := source.get_tarball(location, False)
+				tarball_dir := source.get_tarball(location, false)
 			} else {
 				tarball_dir := source.get_tarball(location, CONF.certs)
 				self.chart_cache[source_key] = tarball_dir
@@ -154,7 +154,7 @@ func (self *Armada) get_chart(ch interface{}) {
 			if auth_method {
 				logstr := logstr + " auth method: {}".format(auth_method)
 			}
-			LOG.info(logstr)
+			LOG.Info(logstr)
 
 			repo_dir := source.git_clone(
 				location,
@@ -169,7 +169,7 @@ func (self *Armada) get_chart(ch interface{}) {
 		chart_name := chart.get("chart_name")
 		return source_exceptions.ChartSourceException(ct_type, chart_name)
 	}
-	for dep := range ch.get("chart", &foo{}).get("dependencies", make([]interfaces, 0)) {
+	for dep := range ch.get("chart", &foo{}).get("dependencies", make([]interface{}, 0)) {
 		self.get_chart(dep)
 	}
 }
@@ -178,7 +178,7 @@ func (self *Armada) sync() {
 	// Synchronize Helm with the Armada Config(s)
 	// """
 	if self.dry_run {
-		LOG.info("Armada is in DRY RUN mode, no changes being made.")
+		LOG.Info("Armada is in DRY RUN mode, no changes being made.")
 	}
 	msg := &foo{
 		"install":   make([]interface{}, 0),
@@ -197,24 +197,24 @@ func (self *Armada) sync() {
 	manifest_data := self.manifest.get(const_KEYWORD_ARMADA, &foo{})
 	prefix := manifest_data.get(const_KEYWORD_PREFIX)
 
-	for chartgroup := range manifest_data.get(const_KEYWORD_GROUPS, make([]interfaces, 0)) {
+	for chartgroup := range manifest_data.get(const_KEYWORD_GROUPS, make([]interface{}, 0)) {
 		cg_name := chartgroup.get("name", "<missing name>")
 		cg_desc := chartgroup.get("description", "<missing description>")
-		cg_sequenced := chartgroup.get("sequenced", False) // JEB or self.force_wait
+		cg_sequenced := chartgroup.get("sequenced", false) // JEB or self.force_wait
 
-		LOG.info("Processing ChartGroup: %s (%s), sequenced:=%s%s", cg_name,
+		LOG.Info("Processing ChartGroup: %s (%s), sequenced:=%s%s", cg_name,
 			cg_desc, cg_sequenced, " (forced) if self.force_wait else ")
 
 		// TODO(MarshM) Deprecate the `test_charts` key
 		cg_test_all_charts := chartgroup.get("test_charts")
 
-		cg_charts := chartgroup.get(const_KEYWORD_CHARTS, make([]interfaces, 0))
+		cg_charts := chartgroup.get(const_KEYWORD_CHARTS, make([]interface{}, 0))
 		charts := nil // JEB map(lambda x: x.get("chart", &foo{}), cg_charts)
 
 		// JEB: deploy_chart was inlined here
 
-		results := make([]interfaces{}, 0)
-		failures := make([]interfaces{}, 0)
+		results := make([]interface{}, 0)
+		failures := make([]interface{}, 0)
 
 		// JEB: handle_result was inlined here
 
@@ -242,7 +242,7 @@ func (self *Armada) sync() {
 		}
 
 		if failures {
-			LOG.error("Chart deploy(s) failed: %s", failures)
+			LOG.Error("Chart deploy(s) failed: %s", failures)
 			return armada_exceptions.ChartDeployException(failures)
 		}
 		for result := range results {
@@ -252,7 +252,7 @@ func (self *Armada) sync() {
 		}
 
 		// End of Charts in ChartGroup
-		LOG.info("All Charts applied in ChartGroup %s.", cg_name)
+		LOG.Info("All Charts applied in ChartGroup %s.", cg_name)
 	}
 	self.post_flight_ops()
 
@@ -262,7 +262,7 @@ func (self *Armada) sync() {
 			self.manifest[const_KEYWORD_ARMADA][const_KEYWORD_GROUPS], msg)
 	}
 
-	LOG.info("Done applying manifest.")
+	LOG.Info("Done applying manifest.")
 	return msg
 }
 
@@ -279,10 +279,10 @@ func (self *Armada) handle_result(chart interface{}, get_result interface{}) {
 	if err != nil {
 		LOG.exception("Chart deploy [{}] failed".format(name))
 		failures.append(name)
-		return True
+		return true
 	} else {
 		results.append(result)
-		return False
+		return false
 	}
 }
 
@@ -290,7 +290,7 @@ func (self *Armada) post_flight_ops() {
 	// """
 	// Operations to run after deployment process has terminated
 	// """
-	LOG.info("Performing post-flight operations.")
+	LOG.Info("Performing post-flight operations.")
 
 	// Delete temp dirs used for deployment
 	for chart_dir := range self.chart_cache.values() {
@@ -300,11 +300,11 @@ func (self *Armada) post_flight_ops() {
 
 }
 func (self *Armada) _chart_cleanup(prefix interface{}, charts interface{}, msg interface{}) {
-	LOG.info("Processing chart cleanup to remove unspecified releases.")
+	LOG.Info("Processing chart cleanup to remove unspecified releases.")
 
-	valid_releases := make([]interfaces{}, 0)
+	valid_releases := make([]interface{}, 0)
 	for gchart := range charts {
-		for chart := range gchart.get(const_KEYWORD_CHARTS, make([]interfaces{}, 0)) {
+		for chart := range gchart.get(const_KEYWORD_CHARTS, make([]interface{}, 0)) {
 			valid_releases.append(
 				release_prefixer(prefix,
 					chart.get("chart", &foo{}).get("release")))
@@ -314,7 +314,7 @@ func (self *Armada) _chart_cleanup(prefix interface{}, charts interface{}, msg i
 
 			for release := range release_diff {
 				if release.startswith(prefix) {
-					LOG.info("Purging release %s as part of chart cleanup.",
+					LOG.Info("Purging release %s as part of chart cleanup.",
 						release)
 					self.tiller.uninstall_release(release)
 					msg["purge"].append(release)

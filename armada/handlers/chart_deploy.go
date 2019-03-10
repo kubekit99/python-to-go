@@ -37,7 +37,7 @@ type ChartDeploy struct {
 	k8s_wait_attempts      int
 	k8s_wait_attempt_sleep int
 	timeout                int
-	tiller                 interface{}
+	tiller                 *Tiller
 }
 
 func (self *ChartDeploy) init(chart interface{}, cg_test_all_charts interface{}, prefix interface{}, known_releases interface{}) {
@@ -54,7 +54,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 	namespace := chart.get("namespace")
 	release := chart.get("release")
 	release_name := r.release_prefixer(prefix, release)
-	LOG.info("Processing Chart, release:=%s", release_name)
+	LOG.Info("Processing Chart, release:=%s", release_name)
 
 	values := chart.get("values", &foo{})
 	pre_actions := &foo{}
@@ -93,7 +93,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 	if status == const_STATUS_DEPLOYED {
 
 		// indicate to the end user what path we are taking
-		LOG.info("Existing release %s found in namespace %s", release_name,
+		LOG.Info("Existing release %s found in namespace %s", release_name,
 			namespace)
 
 		// extract the installed chart and installed values from the
@@ -102,10 +102,10 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 		old_values_string := old_release.config.raw
 
 		upgrade := chart.get("upgrade", &foo{})
-		disable_hooks := upgrade.get("no_hooks", False)
+		disable_hooks := upgrade.get("no_hooks", false)
 		options := upgrade.get("options", &foo{})
-		force := options.get("force", False)
-		recreate_pods := options.get("recreate_pods", False)
+		force := options.get("force", false)
+		recreate_pods := options.get("recreate_pods", false)
 
 		if upgrade {
 			upgrade_pre := upgrade.get("pre", &foo{})
@@ -126,13 +126,13 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 			return armada_exceptions.InvalidOverrideValuesYamlException(chart_desc)
 		}
 
-		LOG.info("Checking for updates to chart release inputs.")
+		LOG.Info("Checking for updates to chart release inputs.")
 		diff := self.get_diff(old_chart, old_values, new_chart, values)
 
 		if !diff {
-			LOG.info("Found no updates to chart release inputs")
+			LOG.Info("Found no updates to chart release inputs")
 		} else {
-			LOG.info("Found updates to chart release inputs")
+			LOG.Info("Found updates to chart release inputs")
 			LOG.debug("%s", diff)
 			result["diff"] = &foo{chart["release"]: str(diff)}
 
@@ -141,7 +141,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 
 			// do actual update
 			timer := int(round(deadline - time.time()))
-			LOG.info(
+			LOG.Info(
 				"Upgrading release %s in namespace %s, wait:=%s, timeout:=%ss", release_name, namespace,
 				native_wait_enabled, timer)
 			tiller_result := self.tiller.update_release(
@@ -157,7 +157,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 				force,
 				recreate_pods)
 
-			LOG.info("Upgrade completed with results from Tiller: %s",
+			LOG.Info("Upgrade completed with results from Tiller: %s",
 				tiller_result.__dict__)
 			result["upgrade"] = release_name
 		}
@@ -186,7 +186,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 					// Release is likely stuck in an unintended (by tiller)
 					// state. Log and continue on with remediation steps
 					// below.
-					LOG.info(
+					LOG.Info(
 						"Old release %s likely stuck in status %s, (last deployment age:=%ss) >:= (chart wait timeout:=%ss)", release, status,
 						last_deployment_age, wait_timeout)
 				}
@@ -194,22 +194,22 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 
 			protected := chart.get("protected", &foo{})
 			if protected {
-				p_continue := protected.get("continue_processing", False)
+				p_continue := protected.get("continue_processing", false)
 				if p_continue {
 					LOG.warn(
-						"Release %s is `protected`, continue_processing:=True. Operator must handle %s release manually.", release_name,
+						"Release %s is `protected`, continue_processing:=true. Operator must handle %s release manually.", release_name,
 						status)
 					result["protected"] = release_name
 					return result
 				} else {
-					LOG.error(
-						"Release %s is `protected`, continue_processing:=False.", release_name)
+					LOG.Error(
+						"Release %s is `protected`, continue_processing:=false.", release_name)
 					return armada_exceptions.ProtectedReleaseException(
 						release_name, status)
 				}
 			} else {
 				// Purge the release
-				LOG.info("Purging release %s with status %s", release_name,
+				LOG.Info("Purging release %s with status %s", release_name,
 					status)
 				chart_delete := ChartDelete(chart, release_name,
 					self.tiller)
@@ -219,7 +219,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 		}
 
 		timer := int(round(deadline - time.time()))
-		LOG.info(
+		LOG.Info(
 			"Installing release %s in namespace %s, wait:=%s, timeout:=%ss", release_name, namespace, native_wait_enabled,
 			timer)
 		tiller_result := self.tiller.install_release(
@@ -230,7 +230,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 			native_wait_enabled,
 			timer)
 
-		LOG.info("Install completed with results from Tiller: %s",
+		LOG.Info("Install completed with results from Tiller: %s",
 			tiller_result.__dict__)
 		result["install"] = release_name
 	}
@@ -260,9 +260,9 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 }
 func (self *ChartDeploy) _test_chart(release_name interface{}, test_handler interface{}) {
 	if self.dry_run {
-		LOG.info(
+		LOG.Info(
 			"Skipping test during `dry-run`, would have tested release:=%s", release_name)
-		return True
+		return true
 	}
 
 	success := test_handler.test_release_for_success()
@@ -284,6 +284,6 @@ func (self *ChartDeploy) find_chart_release(known_releases interface{}, release_
 			return release
 		}
 	}
-	// JEB LOG.info("known: %s, release_name: %s", list(map(lambda r: r.name, known_releases)), release_name)
+	// JEB LOG.Info("known: %s, release_name: %s", list(map(lambda r: r.name, known_releases)), release_name)
 	return None
 }

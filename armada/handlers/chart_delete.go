@@ -31,14 +31,14 @@ type ChartDelete struct {
 	// """
 
 	chart         interface{}
-	release_name  interface{}
+	release_name  string
 	tiller        *Tiller
-	purge         interface{}
+	purge         bool
 	delete_config interface{}
 	// TODO(seaneagan) { Consider allowing this to be a percentage of the
 	// chart's `wait.timeout` so that the timeouts can scale together, and
 	// likely default to some reasonable value, e.g. "50%".
-	timeout interface{}
+	timeout int
 }
 
 // :wait

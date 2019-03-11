@@ -41,6 +41,16 @@ func get_wait_labels(chart interface{}) {
 
 // TODO: Validate this object up front in armada validate flow.
 type ChartWait struct {
+	k8s                    interface{}
+	release_name           string
+	chart                  interface{}
+	wait_config            interface{}
+	namespace              string
+	k8s_wait_attempts      int
+	k8s_wait_attempt_sleep int
+}
+
+func (self *ChartWait) init() {
 	// self.k8s := k8s
 	// self.release_name := release_name
 	// self.chart := chart
@@ -141,11 +151,11 @@ func (self *ChartWait) get_resource_wait(resource_config interface{}) {
 }
 
 type ResourceWait struct {
-	resource_type      interface{}
+	resource_type      string
 	chart_wait         interface{}
 	label_selector     interface{}
 	get_resources      interface{}
-	skip_if_none_found interface{}
+	skip_if_none_found bool
 }
 
 func (self *ResourceWait) is_resource_ready(resource interface{}) {

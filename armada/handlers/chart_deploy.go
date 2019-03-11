@@ -40,7 +40,7 @@ type ChartDeploy struct {
 	tiller                 *Tiller
 }
 
-func (self *ChartDeploy) init(chart interface{}, cg_test_all_charts interface{}, prefix interface{}, known_releases interface{}) {
+func (self *ChartDeploy) init(chart interface{}, cg_test_all_charts interface{}, prefix string, known_releases []string) {
 	self.disable_update_pre = disable_update_pre
 	self.disable_update_post = disable_update_post
 	self.dry_run = dry_run
@@ -50,7 +50,7 @@ func (self *ChartDeploy) init(chart interface{}, cg_test_all_charts interface{},
 	self.tiller = tiller
 
 }
-func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface{}, prefix interface{}, known_releases interface{}) {
+func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface{}, prefix string, known_releases []string) {
 	namespace := chart.get("namespace")
 	release := chart.get("release")
 	release_name := r.release_prefixer(prefix, release)
@@ -258,7 +258,7 @@ func (self *ChartDeploy) execute(chart interface{}, cg_test_all_charts interface
 	return result
 
 }
-func (self *ChartDeploy) _test_chart(release_name interface{}, test_handler interface{}) {
+func (self *ChartDeploy) _test_chart(release_name string, test_handler interface{}) {
 	if self.dry_run {
 		LOG.Info(
 			"Skipping test during `dry-run`, would have tested release:=%s", release_name)
@@ -275,7 +275,7 @@ func (self *ChartDeploy) get_diff(old_chart interface{}, old_values interface{},
 	return ReleaseDiff(old_chart, old_values, new_chart, values).get_diff()
 }
 
-func (self *ChartDeploy) find_chart_release(known_releases interface{}, release_name interface{}) {
+func (self *ChartDeploy) find_chart_release(known_releases []string, release_name string) {
 	// """
 	// Find a release given a list of known_releases and a release name
 	// """
